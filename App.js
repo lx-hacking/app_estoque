@@ -39,8 +39,9 @@ export default function App() {
       >
         <Tab.Screen name="Home" component={HomeScreen} />
         <Tab.Screen name="Vendas" component={SalesScreen} />
-        <Tab.Screen name="Estoque" component={InventoryScreen} />
+        {/* Invertendo a ordem de "Estoque" e "Relatório" */}
         <Tab.Screen name="Relatório" component={ReportScreen} />
+        <Tab.Screen name="Estoque" component={InventoryScreen} />
       </Tab.Navigator>
     </NavigationContainer>
   );
