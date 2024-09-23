@@ -1,6 +1,7 @@
 import React from "react";
 import { NavigationContainer } from "@react-navigation/native";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
+import { createStackNavigator } from "@react-navigation/stack";
 import { Ionicons } from "@expo/vector-icons";
 
 // Importando telas
@@ -8,9 +9,33 @@ import HomeScreen from "./screens/HomeScreen";
 import SalesScreen from "./screens/SalesScreen";
 import InventoryScreen from "./screens/InventoryScreen";
 import ReportScreen from "./screens/ReportScreen";
+import AddProduct from "./screens/AddProduct"; // Importe a tela de cadastro
 
-// Criando o Bottom Tab Navigator
+// Criando o Bottom Tab Navigator e o Stack Navigator
 const Tab = createBottomTabNavigator();
+const Stack = createStackNavigator();
+
+// Stack Navigator para gerenciar as telas relacionadas ao estoque
+function InventoryStack() {
+  return (
+    <Stack.Navigator screenOptions={{ headerTitleAlign: "center" }}>
+      <Stack.Screen
+        name="Inventory"
+        component={InventoryScreen}
+        options={{
+          title: "Estoque",
+        }}
+      />
+      <Stack.Screen
+        name="AddProduct"
+        component={AddProduct}
+        options={{
+          title: "Cadastrar Produto",
+        }}
+      />
+    </Stack.Navigator>
+  );
+}
 
 export default function App() {
   return (
@@ -39,9 +64,12 @@ export default function App() {
       >
         <Tab.Screen name="Home" component={HomeScreen} />
         <Tab.Screen name="Vendas" component={SalesScreen} />
-        {/* Invertendo a ordem de "Estoque" e "Relatório" */}
         <Tab.Screen name="Relatório" component={ReportScreen} />
-        <Tab.Screen name="Estoque" component={InventoryScreen} />
+        <Tab.Screen
+          name="Estoque"
+          component={InventoryStack} // Corrigido para usar o InventoryStack diretamente
+          options={{ headerShown: false }} // Remove o cabeçalho do Tab Navigator
+        />
       </Tab.Navigator>
     </NavigationContainer>
   );

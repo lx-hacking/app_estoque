@@ -10,16 +10,15 @@ const InventoryScreen = ({ navigation }) => {
     });
   }, [navigation]);
 
-  // Função para cadastrar produto
+  // Função para navegar para a tela de Cadastrar Produto
   const handleAddProduct = () => {
-    console.log("Cadastrar Produto");
-    // Adicione a navegação para a tela de cadastrar produto, se necessário
+    navigation.navigate("AddProduct"); // Navega para a tela AddProduct
   };
 
-  // Função para editar produto
+  // Função para editar produto (exemplo)
   const handleEditProduct = () => {
     console.log("Editar Produto");
-    // Adicione a navegação para a tela de editar produto, se necessário
+    // Adicione a navegação ou ação desejada para o botão Editar
   };
 
   return (
@@ -44,14 +43,14 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 20,
     backgroundColor: "#fff",
-    justifyContent: "flex-start", // Alinha o conteúdo ao topo
+    justifyContent: "flex-start",
     alignItems: "center",
   },
   buttonContainer: {
     flexDirection: "row",
     justifyContent: "space-between",
-    width: "60%", // Define a largura total dos botões juntos
-    marginTop: 20, // Espaçamento do topo para os botões
+    width: "60%",
+    marginTop: 20,
   },
   button: {
     backgroundColor: "tomato",
