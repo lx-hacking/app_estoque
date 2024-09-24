@@ -13,6 +13,8 @@ import { Ionicons } from "@expo/vector-icons";
 const InventoryScreen = ({ navigation }) => {
   const [products, setProducts] = useState([]);
   const [selectedProducts, setSelectedProducts] = useState([]);
+  const [sortField, setSortField] = useState("nome"); // Campo de ordenação inicial
+  const [sortDirection, setSortDirection] = useState("asc"); // Direção da ordenação inicial
 
   // Função para buscar produtos do backend
   const fetchProducts = async () => {
@@ -22,7 +24,9 @@ const InventoryScreen = ({ navigation }) => {
         throw new Error("Erro ao buscar produtos");
       }
       const data = await response.json();
-      setProducts(data);
+      // Ordena os produtos por nome de forma crescente como padrão
+      const sortedData = data.sort((a, b) => a.nome.localeCompare(b.nome));
+      setProducts(sortedData);
     } catch (error) {
       console.error("Erro ao buscar produtos:", error);
     }
@@ -62,24 +66,64 @@ const InventoryScreen = ({ navigation }) => {
     navigation.navigate("EditProduct", { products: selectedProducts });
   };
 
+  // Função para ordenar os produtos com base no campo e direção
+  const sortProducts = (field) => {
+    const direction =
+      sortField === field && sortDirection === "asc" ? "desc" : "asc";
+    setSortField(field);
+    setSortDirection(direction);
+
+    const sortedProducts = [...products].sort((a, b) => {
+      if (direction === "asc") {
+        return a[field] > b[field] ? 1 : -1;
+      } else {
+        return a[field] < b[field] ? 1 : -1;
+      }
+    });
+
+    setProducts(sortedProducts);
+  };
+
   // Função para renderizar cada item da lista de produtos
   const renderProduct = ({ item }) => {
     const isSelected = selectedProducts.includes(item);
+    const isLowQuantity = item.quantidade < 10; // Verifica se a quantidade é menor que 10
+
     return (
       <TouchableOpacity
         style={[styles.productRow, isSelected && styles.selectedRow]}
         onPress={() => handleSelectProduct(item)}
       >
-        <Image
-          source={{ uri: `data:image/jpeg;base64,${item.imagem}` }}
-          style={styles.productImage}
-        />
-        <Text style={styles.productText}>{item.nome}</Text>
-        <Text style={styles.productText}>{item.descricao}</Text>
-        <Text style={styles.productText}>{item.valor_venda}</Text>
-        <Text style={styles.productText}>{item.quantidade}</Text>
-        <Text style={styles.productText}>{item.preco_custo}</Text>
+        <View style={[styles.column, { width: "20%" }]}>
+          <Image
+            source={{ uri: `data:image/jpeg;base64,${item.imagem}` }}
+            style={styles.productImage}
+          />
+        </View>
+        <Text style={[styles.productText, { width: "35%" }]}>{item.nome}</Text>
+        <Text style={[styles.productText, { width: "35%" }]}>
+          {item.descricao}
+        </Text>
+        <Text
+          style={[
+            styles.productText,
+            { width: "10%" },
+            isLowQuantity && styles.lowQuantity, // Aplica estilo se quantidade for baixa
+          ]}
+        >
+          {item.quantidade}
+        </Text>
       </TouchableOpacity>
+    );
+  };
+
+  // Função para renderizar o ícone de ordenação
+  const renderSortIcon = (field) => {
+    if (sortField !== field) return null;
+    return sortDirection === "asc" ? (
+      <Ionicons name="arrow-up" size={14} color="black" />
+    ) : (
+      <Ionicons name="arrow-down" size={14} color="black" />
     );
   };
 
@@ -108,12 +152,42 @@ const InventoryScreen = ({ navigation }) => {
       </View>
 
       <View style={styles.header}>
-        <Text style={styles.headerText}>Imagem</Text>
-        <Text style={styles.headerText}>Nome</Text>
-        <Text style={styles.headerText}>Descrição</Text>
-        <Text style={styles.headerText}>Valor</Text>
-        <Text style={styles.headerText}>Qtd</Text>
-        <Text style={styles.headerText}>Custo</Text>
+        <Text style={[styles.headerText, { width: "20%" }]}>Imagem</Text>
+        <TouchableOpacity
+          style={[
+            styles.headerText,
+            {
+              width: "35%",
+              flexDirection: "row",
+              justifyContent: "center",
+              alignItems: "center",
+            },
+          ]}
+          onPress={() => sortProducts("nome")}
+        >
+          <Text style={styles.sortableText}>Nome</Text>
+          {renderSortIcon("nome")}
+        </TouchableOpacity>
+        <Text
+          style={[styles.headerText, { width: "35%", textAlign: "center" }]}
+        >
+          Descrição
+        </Text>
+        <TouchableOpacity
+          style={[
+            styles.headerText,
+            {
+              width: "10%",
+              flexDirection: "row",
+              justifyContent: "center",
+              alignItems: "center",
+            },
+          ]}
+          onPress={() => sortProducts("quantidade")}
+        >
+          <Text style={styles.sortableText}>Qtd</Text>
+          {renderSortIcon("quantidade")}
+        </TouchableOpacity>
       </View>
 
       <FlatList
@@ -137,8 +211,10 @@ const styles = StyleSheet.create({
   buttonContainer: {
     flexDirection: "row",
     justifyContent: "space-between",
-    width: "60%",
-    marginTop: 20,
+    alignItems: "center",
+    width: "100%",
+    paddingHorizontal: 20,
+    marginBottom: 20,
   },
   button: {
     backgroundColor: "tomato",
@@ -168,6 +244,12 @@ const styles = StyleSheet.create({
   headerText: {
     fontSize: 14,
     fontWeight: "bold",
+    textAlign: "center",
+  },
+  sortableText: {
+    fontSize: 14,
+    fontWeight: "bold",
+    color: "tomato",
   },
   listContainer: {
     paddingVertical: 10,
@@ -182,16 +264,24 @@ const styles = StyleSheet.create({
   selectedRow: {
     backgroundColor: "#e0f7fa",
   },
+  column: {
+    justifyContent: "center",
+    alignItems: "center",
+  },
   productImage: {
     width: 50,
     height: 50,
     borderRadius: 5,
-    marginRight: 10,
   },
   productText: {
-    flex: 1,
-    fontSize: 14,
     textAlign: "center",
+    justifyContent: "center",
+    alignItems: "center",
+    fontSize: 14,
+  },
+  lowQuantity: {
+    color: "red",
+    fontWeight: "bold",
   },
 });
 

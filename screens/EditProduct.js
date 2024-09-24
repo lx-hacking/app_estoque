@@ -132,18 +132,21 @@ const EditProduct = ({ route, navigation }) => {
         )}
         <Text style={styles.imageText}>Alterar Imagem</Text>
       </TouchableOpacity>
+      <Text style={styles.label}>Nome</Text>
       <TextInput
         style={styles.input}
         value={item.nome}
         onChangeText={(text) => handleInputChange(text, index, "nome")}
         placeholder="Nome"
       />
+      <Text style={styles.label}>Descrição</Text>
       <TextInput
         style={styles.input}
         value={item.descricao}
         onChangeText={(text) => handleInputChange(text, index, "descricao")}
         placeholder="Descrição"
       />
+      <Text style={styles.label}>Valor</Text>
       <TextInput
         style={styles.input}
         value={item.valor_venda.toString()}
@@ -151,6 +154,7 @@ const EditProduct = ({ route, navigation }) => {
         placeholder="Valor"
         keyboardType="numeric"
       />
+      <Text style={styles.label}>Quantidade</Text>
       <TextInput
         style={styles.input}
         value={item.quantidade.toString()}
@@ -158,6 +162,7 @@ const EditProduct = ({ route, navigation }) => {
         placeholder="Quantidade"
         keyboardType="numeric"
       />
+      <Text style={styles.label}>Custo</Text>
       <TextInput
         style={styles.input}
         value={item.preco_custo.toString()}
@@ -215,6 +220,11 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "#ccc",
     borderRadius: 5,
+  },
+  label: {
+    fontSize: 14,
+    marginBottom: 5,
+    color: "#333",
   },
   input: {
     height: 40,
