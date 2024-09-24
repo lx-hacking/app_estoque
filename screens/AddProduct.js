@@ -7,7 +7,7 @@ import {
   StyleSheet,
   TouchableOpacity,
   Image,
-  Alert,
+  Modal,
 } from "react-native";
 import * as ImagePicker from "expo-image-picker";
 
@@ -19,24 +19,23 @@ const AddProduct = ({ navigation }) => {
   const [productCost, setProductCost] = useState("");
   const [image, setImage] = useState(null);
   const [base64Image, setBase64Image] = useState(null);
+  const [showSuccessModal, setShowSuccessModal] = useState(false); // Estado para o modal de sucesso
 
-  // Função para selecionar uma imagem da galeria e converter para base64
   const pickImage = async () => {
     let result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
       allowsEditing: true,
       aspect: [4, 3],
       quality: 1,
-      base64: true, // Importante para habilitar a captura em base64
+      base64: true,
     });
 
     if (!result.canceled) {
       setImage(result.assets[0]);
-      setBase64Image(result.assets[0].base64); // Captura a imagem em base64
+      setBase64Image(result.assets[0].base64);
     }
   };
 
-  // Função para salvar o produto no banco de dados
   const saveProduct = async () => {
     if (!productName || !productValue || !productQuantity || !productCost) {
       Alert.alert("Erro", "Preencha todos os campos obrigatórios.");
@@ -54,7 +53,7 @@ const AddProduct = ({ navigation }) => {
       valor_venda: productValue,
       quantidade: productQuantity,
       preco_custo: productCost,
-      image: base64Image, // Envia a imagem em formato base64
+      image: base64Image,
     };
 
     try {
@@ -69,20 +68,48 @@ const AddProduct = ({ navigation }) => {
       if (!response.ok) {
         const errorText = await response.text();
         Alert.alert("Erro", `Falha ao salvar o produto: ${errorText}`);
-        console.log("Erro:", errorText);
         return;
       }
 
-      Alert.alert("Sucesso", "Produto salvo com sucesso!");
-      navigation.goBack();
+      // Exibe o modal de sucesso e reseta o formulário
+      setShowSuccessModal(true);
+      resetForm();
     } catch (error) {
-      console.error("Erro ao salvar o produto:", error);
       Alert.alert("Erro", "Não foi possível conectar ao servidor.");
     }
   };
 
+  const resetForm = () => {
+    setProductName("");
+    setProductDescription("");
+    setProductValue("");
+    setProductQuantity("");
+    setProductCost("");
+    setImage(null);
+    setBase64Image(null);
+  };
+
   return (
     <View style={styles.container}>
+      <Modal
+        visible={showSuccessModal}
+        transparent={true}
+        animationType="slide"
+      >
+        <View style={styles.modalContainer}>
+          <View style={styles.modalContent}>
+            <Text style={styles.successText}>Produto salvo com sucesso!</Text>
+            <Button
+              title="OK"
+              onPress={() => {
+                setShowSuccessModal(false);
+                navigation.navigate("Estoque", { refresh: true });
+              }}
+            />
+          </View>
+        </View>
+      </Modal>
+
       <Text style={styles.label}>Nome do Produto</Text>
       <TextInput
         style={styles.input}
@@ -179,6 +206,23 @@ const styles = StyleSheet.create({
     width: 100,
     height: 100,
     borderRadius: 5,
+  },
+  modalContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+  },
+  modalContent: {
+    backgroundColor: "white",
+    padding: 20,
+    borderRadius: 10,
+    alignItems: "center",
+  },
+  successText: {
+    fontSize: 18,
+    marginBottom: 10,
+    color: "#4BB543",
   },
 });
 

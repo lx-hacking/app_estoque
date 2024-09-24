@@ -67,6 +67,24 @@ app.post("/addproduct", (req, res) => {
   }
 });
 
+// Endpoint para buscar todos os produtos
+app.get("/products", (req, res) => {
+  const sql = `SELECT id, nome, descricao, valor_venda, quantidade, preco_custo, imagem FROM produtos`;
+
+  db.query(sql, (err, results) => {
+    if (err) {
+      console.error("Erro ao buscar produtos:", err);
+      return res.status(500).send(`Erro ao buscar produtos: ${err.message}`);
+    }
+    // Converte cada imagem BLOB para base64 para exibição correta no frontend
+    const produtos = results.map((produto) => ({
+      ...produto,
+      imagem: produto.imagem ? produto.imagem.toString("base64") : null,
+    }));
+    res.json(produtos);
+  });
+});
+
 // Inicia o servidor
 app.listen(port, () => {
   console.log(`Servidor rodando em http://localhost:${port}`);
