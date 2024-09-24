@@ -6,11 +6,13 @@ import {
   StyleSheet,
   FlatList,
   Image,
+  Alert,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 
 const InventoryScreen = ({ navigation }) => {
   const [products, setProducts] = useState([]);
+  const [selectedProducts, setSelectedProducts] = useState([]);
 
   // Função para buscar produtos do backend
   const fetchProducts = async () => {
@@ -28,50 +30,78 @@ const InventoryScreen = ({ navigation }) => {
 
   // useEffect para carregar a lista de produtos ao montar o componente
   useEffect(() => {
-    fetchProducts(); // Chama a função para buscar produtos quando o componente é montado
+    fetchProducts();
 
     // Listener para atualizar a lista sempre que a tela ganha foco
     const unsubscribe = navigation.addListener("focus", () => {
-      fetchProducts(); // Atualiza os produtos quando a tela é focada
+      fetchProducts();
+      setSelectedProducts([]); // Reseta a seleção ao voltar para Inventory
     });
 
-    return unsubscribe; // Remove o listener ao desmontar o componente
+    return unsubscribe;
   }, [navigation]);
 
-  // Função para navegar para a tela de cadastro de produtos
-  const handleAddProduct = () => {
-    navigation.navigate("AddProduct");
+  // Função para lidar com a seleção de itens
+  const handleSelectProduct = (product) => {
+    if (selectedProducts.includes(product)) {
+      setSelectedProducts(
+        selectedProducts.filter((item) => item.id !== product.id)
+      );
+    } else {
+      setSelectedProducts([...selectedProducts, product]);
+    }
   };
 
-  // Função para editar produto (a implementação pode ser ajustada conforme necessário)
+  // Função para editar os produtos selecionados
   const handleEditProduct = () => {
-    console.log("Editar Produto");
+    if (selectedProducts.length === 0) {
+      Alert.alert("Aviso", "Selecione pelo menos um produto para editar.");
+      return;
+    }
+
+    navigation.navigate("EditProduct", { products: selectedProducts });
   };
 
-  // Renderiza cada item da lista de produtos
-  const renderProduct = ({ item }) => (
-    <View style={styles.productRow}>
-      <Image
-        source={{ uri: `data:image/jpeg;base64,${item.imagem}` }}
-        style={styles.productImage}
-      />
-      <Text style={styles.productText}>{item.nome}</Text>
-      <Text style={styles.productText}>{item.descricao}</Text>
-      <Text style={styles.productText}>{item.valor_venda}</Text>
-      <Text style={styles.productText}>{item.quantidade}</Text>
-      <Text style={styles.productText}>{item.preco_custo}</Text>
-    </View>
-  );
+  // Função para renderizar cada item da lista de produtos
+  const renderProduct = ({ item }) => {
+    const isSelected = selectedProducts.includes(item);
+    return (
+      <TouchableOpacity
+        style={[styles.productRow, isSelected && styles.selectedRow]}
+        onPress={() => handleSelectProduct(item)}
+      >
+        <Image
+          source={{ uri: `data:image/jpeg;base64,${item.imagem}` }}
+          style={styles.productImage}
+        />
+        <Text style={styles.productText}>{item.nome}</Text>
+        <Text style={styles.productText}>{item.descricao}</Text>
+        <Text style={styles.productText}>{item.valor_venda}</Text>
+        <Text style={styles.productText}>{item.quantidade}</Text>
+        <Text style={styles.productText}>{item.preco_custo}</Text>
+      </TouchableOpacity>
+    );
+  };
 
   return (
     <View style={styles.container}>
       <View style={styles.buttonContainer}>
-        <TouchableOpacity style={styles.button} onPress={handleAddProduct}>
+        <TouchableOpacity
+          style={styles.button}
+          onPress={() => navigation.navigate("AddProduct")}
+        >
           <Ionicons name="add-circle-outline" size={28} color="#fff" />
           <Text style={styles.buttonText}>Cadastrar</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.button} onPress={handleEditProduct}>
+        <TouchableOpacity
+          style={[
+            styles.button,
+            selectedProducts.length === 0 && styles.disabledButton,
+          ]}
+          onPress={handleEditProduct}
+          disabled={selectedProducts.length === 0} // Habilita o botão ao selecionar pelo menos um item
+        >
           <Ionicons name="create-outline" size={28} color="#fff" />
           <Text style={styles.buttonText}>Editar</Text>
         </TouchableOpacity>
@@ -125,6 +155,9 @@ const styles = StyleSheet.create({
     marginTop: 5,
     textAlign: "center",
   },
+  disabledButton: {
+    backgroundColor: "#ccc",
+  },
   header: {
     flexDirection: "row",
     justifyContent: "space-around",
@@ -145,6 +178,9 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     borderBottomWidth: 1,
     borderBottomColor: "#ddd",
+  },
+  selectedRow: {
+    backgroundColor: "#e0f7fa",
   },
   productImage: {
     width: 50,

@@ -10,6 +10,7 @@ import SalesScreen from "./screens/SalesScreen";
 import InventoryScreen from "./screens/InventoryScreen";
 import ReportScreen from "./screens/ReportScreen";
 import AddProduct from "./screens/AddProduct"; // Importe a tela de cadastro
+import EditProduct from "./screens/EditProduct"; // Importe a tela de edição
 
 // Criando o Bottom Tab Navigator e o Stack Navigator
 const Tab = createBottomTabNavigator();
@@ -31,6 +32,13 @@ function InventoryStack() {
         component={AddProduct}
         options={{
           title: "Cadastrar Produto",
+        }}
+      />
+      <Stack.Screen
+        name="EditProduct"
+        component={EditProduct}
+        options={{
+          title: "Editar Produtos",
         }}
       />
     </Stack.Navigator>
@@ -67,7 +75,7 @@ export default function App() {
         <Tab.Screen name="Relatório" component={ReportScreen} />
         <Tab.Screen
           name="Estoque"
-          component={InventoryStack} // Corrigido para usar o InventoryStack diretamente
+          component={InventoryStack}
           options={{ headerShown: false }} // Remove o cabeçalho do Tab Navigator
         />
       </Tab.Navigator>
