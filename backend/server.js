@@ -86,54 +86,38 @@ app.get("/products", (req, res) => {
 });
 
 // Endpoint para atualizar produtos selecionados
-app.post("/updateproducts", (req, res) => {
-  const { products } = req.body;
+// Rota para atualizar o estoque após finalizar a compra
+app.post("/updateStock", (req, res) => {
+  const { items } = req.body; // Recebe os itens do carrinho
 
-  // Verificação se os produtos foram recebidos
-  if (!products || products.length === 0) {
-    return res.status(400).send("Nenhum produto selecionado para atualizar.");
+  // Verifica se há itens para atualizar
+  if (!items || items.length === 0) {
+    return res.status(400).send("Nenhum item para atualizar.");
   }
 
-  let updateErrors = [];
-  let processedCount = 0;
-
-  products.forEach((product) => {
-    let sql =
-      "UPDATE produtos SET nome = ?, descricao = ?, valor_venda = ?, quantidade = ?, preco_custo = ? WHERE id = ?";
-    const values = [
-      product.nome,
-      product.descricao,
-      parseFloat(product.valor_venda),
-      parseInt(product.quantidade),
-      parseFloat(product.preco_custo),
-      product.id,
-    ];
-
-    // Se uma nova imagem foi fornecida, atualize também o campo de imagem
-    if (product.imagem) {
-      sql =
-        "UPDATE produtos SET nome = ?, descricao = ?, valor_venda = ?, quantidade = ?, preco_custo = ?, imagem = ? WHERE id = ?";
-      values.splice(5, 0, Buffer.from(product.imagem, "base64"));
-    }
-
-    db.query(sql, values, (err, result) => {
-      processedCount++;
-      if (err) {
-        console.error(`Erro ao atualizar produto ID ${product.id}:`, err);
-        updateErrors.push(`Erro no produto ID ${product.id}: ${err.message}`);
-      }
-
-      // Verifica se todos os produtos foram processados
-      if (processedCount === products.length) {
-        if (updateErrors.length > 0) {
-          return res
-            .status(500)
-            .send(`Erros ao atualizar produtos: ${updateErrors.join(", ")}`);
+  // Array de promessas para as atualizações
+  const updatePromises = items.map((item) => {
+    return new Promise((resolve, reject) => {
+      const sql = `UPDATE produtos SET quantidade = quantidade - ? WHERE id = ?`;
+      db.query(sql, [item.count, item.id], (err, result) => {
+        if (err) {
+          console.error(`Erro ao atualizar o produto ${item.nome}:`, err);
+          reject(`Erro ao atualizar o produto ${item.nome}`);
+        } else {
+          resolve();
         }
-        res.status(200).send("Produtos atualizados com sucesso");
-      }
+      });
     });
   });
+
+  // Aguarda todas as promessas de atualização serem concluídas
+  Promise.all(updatePromises)
+    .then(() => {
+      res.status(200).send("Estoque atualizado com sucesso.");
+    })
+    .catch((error) => {
+      res.status(500).send(`Erros ao atualizar produtos: ${error}`);
+    });
 });
 
 // Inicia o servidor
