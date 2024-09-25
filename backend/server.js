@@ -85,12 +85,10 @@ app.get("/products", (req, res) => {
   });
 });
 
-// Endpoint para atualizar produtos selecionados
-// Rota para atualizar o estoque após finalizar a compra
+// Endpoint para atualizar o estoque após finalizar a compra e salvar a venda
 app.post("/updateStock", (req, res) => {
-  const { items } = req.body; // Recebe os itens do carrinho
+  const { items } = req.body;
 
-  // Verifica se há itens para atualizar
   if (!items || items.length === 0) {
     return res.status(400).send("Nenhum item para atualizar.");
   }
@@ -98,14 +96,31 @@ app.post("/updateStock", (req, res) => {
   // Array de promessas para as atualizações
   const updatePromises = items.map((item) => {
     return new Promise((resolve, reject) => {
-      const sql = `UPDATE produtos SET quantidade = quantidade - ? WHERE id = ?`;
-      db.query(sql, [item.count, item.id], (err, result) => {
+      const sqlUpdate = `UPDATE produtos SET quantidade = quantidade - ? WHERE id = ?`;
+      db.query(sqlUpdate, [item.count, item.id], (err) => {
         if (err) {
           console.error(`Erro ao atualizar o produto ${item.nome}:`, err);
-          reject(`Erro ao atualizar o produto ${item.nome}`);
-        } else {
-          resolve();
+          return reject(`Erro ao atualizar o produto ${item.nome}`);
         }
+
+        // Inserir o registro de venda
+        const sqlInsertVenda = `INSERT INTO vendas (produto_id, quantidade, valor_venda, data_hora) VALUES (?, ?, ?, NOW())`;
+        db.query(
+          sqlInsertVenda,
+          [item.id, item.count, item.valor_venda],
+          (err) => {
+            if (err) {
+              console.error(
+                `Erro ao registrar venda para o produto ${item.nome}:`,
+                err
+              );
+              return reject(
+                `Erro ao registrar venda para o produto ${item.nome}`
+              );
+            }
+            resolve();
+          }
+        );
       });
     });
   });
@@ -113,11 +128,65 @@ app.post("/updateStock", (req, res) => {
   // Aguarda todas as promessas de atualização serem concluídas
   Promise.all(updatePromises)
     .then(() => {
-      res.status(200).send("Estoque atualizado com sucesso.");
+      res
+        .status(200)
+        .send("Estoque atualizado e vendas registradas com sucesso.");
     })
     .catch((error) => {
-      res.status(500).send(`Erros ao atualizar produtos: ${error}`);
+      res
+        .status(500)
+        .send(`Erros ao atualizar produtos e registrar vendas: ${error}`);
     });
+});
+
+// Endpoint para buscar as vendas agrupadas por data para o relatório
+app.get("/salesReport", (req, res) => {
+  const sql = `
+    SELECT 
+      v.id, 
+      DATE(v.data_hora) AS data, 
+      p.nome AS produto, 
+      p.descricao AS descricao, 
+      v.quantidade, 
+      (v.quantidade * v.valor_venda) AS valor_total,
+      p.id AS produto_id
+    FROM vendas v
+    JOIN produtos p ON p.id = v.produto_id
+    ORDER BY v.data_hora DESC`;
+
+  db.query(sql, (err, results) => {
+    if (err) {
+      console.error("Erro ao buscar relatório de vendas:", err);
+      return res.status(500).send("Erro ao buscar relatório de vendas.");
+    }
+
+    // Agrupar vendas por data
+    const groupedSales = results.reduce((acc, sale) => {
+      const date = sale.data.toLocaleDateString("pt-BR");
+      if (!acc[date]) {
+        acc[date] = { items: [], total: 0 };
+      }
+      acc[date].items.push(sale);
+      acc[date].total += sale.valor_total;
+      return acc;
+    }, {});
+
+    res.status(200).json(groupedSales);
+  });
+});
+
+// Endpoint para buscar o relatório de estoque
+app.get("/inventoryReport", (req, res) => {
+  const sql = `SELECT nome, descricao, quantidade FROM produtos ORDER BY nome ASC`;
+
+  db.query(sql, (err, results) => {
+    if (err) {
+      console.error("Erro ao buscar relatório de estoque:", err);
+      return res.status(500).send("Erro ao buscar relatório de estoque.");
+    }
+
+    res.status(200).json(results);
+  });
 });
 
 // Inicia o servidor
