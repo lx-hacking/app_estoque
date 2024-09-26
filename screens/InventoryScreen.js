@@ -269,6 +269,9 @@ const InventoryScreen = ({ navigation }) => {
         </TouchableOpacity>
       </View>
 
+      {/* Título abaixo dos botões */}
+      <Text style={styles.title}>Controle de Estoque</Text>
+
       {/* Container branco com campo de busca e lista */}
       <View style={styles.container}>
         <View style={styles.listContainer}>
@@ -314,7 +317,7 @@ const InventoryScreen = ({ navigation }) => {
 const styles = StyleSheet.create({
   outerContainer: {
     flex: 1,
-    backgroundColor: "#f9f9f9", // Cor de fundo cinza semelhante à tela do relatório
+    backgroundColor: "#f9f9f9",
     padding: 10,
   },
   container: {
@@ -368,6 +371,13 @@ const styles = StyleSheet.create({
   disabledButton: {
     backgroundColor: "#ccc",
   },
+  title: {
+    fontSize: 18,
+    fontWeight: "bold",
+    color: "#333",
+    marginBottom: 10,
+    textAlign: "left",
+  },
   header: {
     flexDirection: "row",
     justifyContent: "space-around",
@@ -402,7 +412,7 @@ const styles = StyleSheet.create({
     paddingLeft: 5,
   },
   selectedRow: {
-    backgroundColor: "#e0f7fa",
+    backgroundColor: "#e3f7fa",
   },
   column: {
     justifyContent: "center",

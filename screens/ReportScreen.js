@@ -9,7 +9,7 @@ import {
   TextInput,
   Alert,
 } from "react-native";
-import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons"; // Importando os ícones necessários
+import { Ionicons } from "@expo/vector-icons";
 import * as Sharing from "expo-sharing";
 import * as FileSystem from "expo-file-system";
 import XLSX from "xlsx";
@@ -80,34 +80,40 @@ const ReportScreen = ({ navigation }) => {
     }
   }, [activeReport]);
 
-  const sortedInventoryData = [...filteredInventoryData].sort((a, b) => {
-    if (sortConfig.key) {
-      const valueA =
-        sortConfig.key === "nome" ? a.nome.toLowerCase() : a.quantidade;
-      const valueB =
-        sortConfig.key === "nome" ? b.nome.toLowerCase() : b.quantidade;
+  const sortInventoryData = (data, key, direction) => {
+    return [...data].sort((a, b) => {
+      let valueA = a[key];
+      let valueB = b[key];
 
-      if (valueA < valueB) {
-        return sortConfig.direction === "asc" ? -1 : 1;
+      // Tratamento de ordenação específica para strings (alfabética) e números
+      if (typeof valueA === "string" && typeof valueB === "string") {
+        valueA = valueA.toLowerCase();
+        valueB = valueB.toLowerCase();
+      } else if (typeof valueA === "number" && typeof valueB === "number") {
+        // Comparação numérica
+        valueA = parseFloat(valueA);
+        valueB = parseFloat(valueB);
       }
-      if (valueA > valueB) {
-        return sortConfig.direction === "asc" ? 1 : -1;
-      }
+
+      if (valueA < valueB) return direction === "asc" ? -1 : 1;
+      if (valueA > valueB) return direction === "asc" ? 1 : -1;
       return 0;
-    }
-    return 0;
-  });
+    });
+  };
 
   const toggleSort = (key) => {
-    setSortConfig((prevConfig) => {
-      if (prevConfig.key === key) {
-        return {
-          key,
-          direction: prevConfig.direction === "asc" ? "desc" : "asc",
-        };
-      }
-      return { key, direction: "asc" };
-    });
+    const newDirection =
+      sortConfig.key === key && sortConfig.direction === "asc" ? "desc" : "asc";
+
+    setSortConfig({ key, direction: newDirection });
+
+    // Ordena a lista com base na nova configuração
+    const sortedData = sortInventoryData(
+      filteredInventoryData,
+      key,
+      newDirection
+    );
+    setFilteredInventoryData(sortedData);
   };
 
   const handleSearch = (text) => {
@@ -313,14 +319,16 @@ const ReportScreen = ({ navigation }) => {
                       />
                     </Text>
                   </TouchableOpacity>
-                  <Text
+                  <TouchableOpacity
                     style={[
                       styles.inventoryColumnHeader,
                       styles.descriptionColumn,
                     ]}
                   >
-                    Descrição
-                  </Text>
+                    <Text style={[styles.headerText, styles.centerText]}>
+                      Descrição
+                    </Text>
+                  </TouchableOpacity>
                   <TouchableOpacity
                     style={[styles.inventoryColumnHeader, styles.qtyColumn]}
                     onPress={() => toggleSort("quantidade")}
@@ -343,8 +351,8 @@ const ReportScreen = ({ navigation }) => {
                   </TouchableOpacity>
                 </View>
                 <FlatList
-                  data={sortedInventoryData}
-                  keyExtractor={(item) => item.nome}
+                  data={filteredInventoryData}
+                  keyExtractor={(item, index) => `${item.nome}-${index}`}
                   renderItem={renderInventoryItem}
                   ListEmptyComponent={
                     <Text style={styles.emptyText}>
@@ -508,7 +516,7 @@ const styles = StyleSheet.create({
   },
   descriptionColumn: {
     width: "30%",
-    textAlign: "left",
+    textAlign: "center",
     paddingHorizontal: 5,
   },
   qtyColumn: {

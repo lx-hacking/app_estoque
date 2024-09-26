@@ -11,17 +11,26 @@ import {
   Alert,
 } from "react-native";
 import * as ImagePicker from "expo-image-picker";
-import { Picker } from "@react-native-picker/picker"; // Corrigindo a importação do Picker
+import { Picker } from "@react-native-picker/picker";
 
 const AddProduct = ({ navigation }) => {
   const [productName, setProductName] = useState("");
-  const [productVolume, setProductVolume] = useState("10ml"); // Estado para o volume selecionado
+  const [productVolume, setProductVolume] = useState("10ml");
   const [productValue, setProductValue] = useState("");
   const [productQuantity, setProductQuantity] = useState("");
   const [productCost, setProductCost] = useState("");
   const [image, setImage] = useState(null);
   const [base64Image, setBase64Image] = useState(null);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
+
+  // Estados para controlar a cor da borda em caso de erro
+  const [borderColors, setBorderColors] = useState({
+    name: "#ccc",
+    value: "#ccc",
+    quantity: "#ccc",
+    cost: "#ccc",
+    image: "#ccc",
+  });
 
   const pickImage = async () => {
     let result = await ImagePicker.launchImageLibraryAsync({
@@ -35,23 +44,30 @@ const AddProduct = ({ navigation }) => {
     if (!result.canceled) {
       setImage(result.assets[0]);
       setBase64Image(result.assets[0].base64);
+      setBorderColors((prev) => ({ ...prev, image: "#ccc" })); // Reseta a borda se a imagem foi selecionada
     }
   };
 
   const saveProduct = async () => {
-    if (!productName || !productValue || !productQuantity || !productCost) {
-      Alert.alert("Erro", "Preencha todos os campos obrigatórios.");
-      return;
-    }
+    // Validação para verificar campos vazios e ajustar as bordas
+    const errors = {
+      name: productName ? "#ccc" : "tomato",
+      value: productValue ? "#ccc" : "tomato",
+      quantity: productQuantity ? "#ccc" : "tomato",
+      cost: productCost ? "#ccc" : "tomato",
+      image: base64Image ? "#ccc" : "tomato",
+    };
 
-    if (!base64Image) {
-      Alert.alert("Erro", "Selecione uma imagem.");
+    setBorderColors(errors);
+
+    if (Object.values(errors).includes("tomato")) {
+      Alert.alert("Erro", "Preencha todos os campos obrigatórios.");
       return;
     }
 
     const data = {
       nome: productName,
-      descricao: productVolume, // Salva o volume selecionado na descrição
+      descricao: productVolume,
       valor_venda: productValue,
       quantidade: productQuantity,
       preco_custo: productCost,
@@ -88,6 +104,13 @@ const AddProduct = ({ navigation }) => {
     setProductCost("");
     setImage(null);
     setBase64Image(null);
+    setBorderColors({
+      name: "#ccc",
+      value: "#ccc",
+      quantity: "#ccc",
+      cost: "#ccc",
+      image: "#ccc",
+    });
   };
 
   return (
@@ -113,10 +136,13 @@ const AddProduct = ({ navigation }) => {
 
       <Text style={styles.label}>Nome do Produto</Text>
       <TextInput
-        style={styles.input}
+        style={[styles.input, { borderColor: borderColors.name }]}
         placeholder="Digite o nome do produto"
         value={productName}
-        onChangeText={setProductName}
+        onChangeText={(text) => {
+          setProductName(text);
+          setBorderColors((prev) => ({ ...prev, name: "#ccc" }));
+        }}
         returnKeyType="done"
       />
 
@@ -134,35 +160,47 @@ const AddProduct = ({ navigation }) => {
 
       <Text style={styles.label}>Valor de venda</Text>
       <TextInput
-        style={styles.input}
+        style={[styles.input, { borderColor: borderColors.value }]}
         placeholder="Digite o valor"
         value={productValue}
-        onChangeText={setProductValue}
+        onChangeText={(text) => {
+          setProductValue(text);
+          setBorderColors((prev) => ({ ...prev, value: "#ccc" }));
+        }}
         keyboardType="numeric"
         returnKeyType="done"
       />
 
       <Text style={styles.label}>Quantidade</Text>
       <TextInput
-        style={styles.input}
+        style={[styles.input, { borderColor: borderColors.quantity }]}
         placeholder="Digite a quantidade"
         value={productQuantity}
-        onChangeText={setProductQuantity}
+        onChangeText={(text) => {
+          setProductQuantity(text);
+          setBorderColors((prev) => ({ ...prev, quantity: "#ccc" }));
+        }}
         keyboardType="numeric"
         returnKeyType="done"
       />
 
       <Text style={styles.label}>Preço de Custo</Text>
       <TextInput
-        style={styles.input}
+        style={[styles.input, { borderColor: borderColors.cost }]}
         placeholder="Digite o custo"
         value={productCost}
-        onChangeText={setProductCost}
+        onChangeText={(text) => {
+          setProductCost(text);
+          setBorderColors((prev) => ({ ...prev, cost: "#ccc" }));
+        }}
         keyboardType="numeric"
         returnKeyType="done"
       />
 
-      <TouchableOpacity style={styles.imagePicker} onPress={pickImage}>
+      <TouchableOpacity
+        style={[styles.imagePicker, { borderColor: borderColors.image }]}
+        onPress={pickImage}
+      >
         {image ? (
           <Image source={{ uri: image.uri }} style={styles.thumbnail} />
         ) : (
@@ -187,7 +225,6 @@ const styles = StyleSheet.create({
   },
   input: {
     height: 40,
-    borderColor: "#ccc",
     borderWidth: 1,
     paddingHorizontal: 10,
     borderRadius: 5,
@@ -206,7 +243,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     height: 150,
-    borderColor: "#ccc",
     borderWidth: 1,
     borderRadius: 5,
     marginBottom: 10,
