@@ -33,7 +33,7 @@ app.post("/addproduct", (req, res) => {
 
     if (!image) {
       console.error("Erro: Imagem não foi recebida.");
-      return res.status(400).send("Erro: Imagem não foi recebida.");
+      return res.status(400).json({ error: "Erro: Imagem não foi recebida." });
     }
 
     // Decodifica a imagem de base64 para binário
@@ -56,14 +56,14 @@ app.post("/addproduct", (req, res) => {
           console.error("Erro ao inserir produto no banco de dados:", err);
           return res
             .status(500)
-            .send(`Erro ao inserir produto: ${err.message}`);
+            .json({ error: `Erro ao inserir produto: ${err.message}` });
         }
-        res.send("Produto salvo com sucesso!");
+        res.status(201).json({ message: "Produto salvo com sucesso!" });
       }
     );
   } catch (error) {
     console.error("Erro inesperado ao processar a requisição:", error);
-    res.status(500).send(`Erro inesperado: ${error.message}`);
+    res.status(500).json({ error: `Erro inesperado: ${error.message}` });
   }
 });
 
@@ -74,14 +74,83 @@ app.get("/products", (req, res) => {
   db.query(sql, (err, results) => {
     if (err) {
       console.error("Erro ao buscar produtos:", err);
-      return res.status(500).send(`Erro ao buscar produtos: ${err.message}`);
+      return res
+        .status(500)
+        .json({ error: `Erro ao buscar produtos: ${err.message}` });
     }
     // Converte cada imagem BLOB para base64 para exibição correta no frontend
     const produtos = results.map((produto) => ({
       ...produto,
       imagem: produto.imagem ? produto.imagem.toString("base64") : null,
     }));
+    res.setHeader("Content-Type", "application/json");
     res.json(produtos);
+  });
+});
+
+// Endpoint para atualizar múltiplos produtos
+app.post("/updateproducts", (req, res) => {
+  const { products } = req.body;
+
+  if (!products || products.length === 0) {
+    return res.status(400).json({ error: "Nenhum produto para atualizar." });
+  }
+
+  const updatePromises = products.map((product) => {
+    const {
+      id,
+      nome,
+      descricao,
+      quantidade,
+      valor_venda,
+      preco_custo,
+      imagem,
+    } = product;
+    const imagemBuffer = imagem ? Buffer.from(imagem, "base64") : null;
+
+    const sql = `UPDATE produtos SET nome = ?, descricao = ?, quantidade = ?, valor_venda = ?, preco_custo = ?, imagem = ? WHERE id = ?`;
+
+    return new Promise((resolve, reject) => {
+      db.query(
+        sql,
+        [
+          nome,
+          descricao,
+          quantidade,
+          valor_venda,
+          preco_custo,
+          imagemBuffer,
+          id,
+        ],
+        (err, result) => {
+          if (err) {
+            console.error("Erro ao atualizar produto:", err);
+            return reject(`Erro ao atualizar produto: ${err.message}`);
+          }
+          resolve();
+        }
+      );
+    });
+  });
+
+  Promise.all(updatePromises)
+    .then(() => res.json({ message: "Produtos atualizados com sucesso!" }))
+    .catch((error) =>
+      res.status(500).json({ error: `Erro ao atualizar produtos: ${error}` })
+    );
+});
+
+// Endpoint para deletar um produto
+app.delete("/deleteproduct/:id", (req, res) => {
+  const { id } = req.params;
+
+  const sql = `DELETE FROM produtos WHERE id = ?`;
+  db.query(sql, [id], (err, result) => {
+    if (err) {
+      console.error("Erro ao deletar produto:", err);
+      return res.status(500).json({ error: "Erro ao deletar produto." });
+    }
+    res.status(200).json({ message: "Produto deletado com sucesso!" });
   });
 });
 
@@ -90,10 +159,9 @@ app.post("/updateStock", (req, res) => {
   const { items } = req.body;
 
   if (!items || items.length === 0) {
-    return res.status(400).send("Nenhum item para atualizar.");
+    return res.status(400).json({ error: "Nenhum item para atualizar." });
   }
 
-  // Array de promessas para as atualizações
   const updatePromises = items.map((item) => {
     return new Promise((resolve, reject) => {
       const sqlUpdate = `UPDATE produtos SET quantidade = quantidade - ? WHERE id = ?`;
@@ -103,7 +171,6 @@ app.post("/updateStock", (req, res) => {
           return reject(`Erro ao atualizar o produto ${item.nome}`);
         }
 
-        // Inserir o registro de venda
         const sqlInsertVenda = `INSERT INTO vendas (produto_id, quantidade, valor_venda, data_hora) VALUES (?, ?, ?, NOW())`;
         db.query(
           sqlInsertVenda,
@@ -125,17 +192,16 @@ app.post("/updateStock", (req, res) => {
     });
   });
 
-  // Aguarda todas as promessas de atualização serem concluídas
   Promise.all(updatePromises)
     .then(() => {
-      res
-        .status(200)
-        .send("Estoque atualizado e vendas registradas com sucesso.");
+      res.status(200).json({
+        message: "Estoque atualizado e vendas registradas com sucesso.",
+      });
     })
     .catch((error) => {
-      res
-        .status(500)
-        .send(`Erros ao atualizar produtos e registrar vendas: ${error}`);
+      res.status(500).json({
+        error: `Erros ao atualizar produtos e registrar vendas: ${error}`,
+      });
     });
 });
 
@@ -157,10 +223,11 @@ app.get("/salesReport", (req, res) => {
   db.query(sql, (err, results) => {
     if (err) {
       console.error("Erro ao buscar relatório de vendas:", err);
-      return res.status(500).send("Erro ao buscar relatório de vendas.");
+      return res
+        .status(500)
+        .json({ error: "Erro ao buscar relatório de vendas." });
     }
 
-    // Agrupar vendas por data
     const groupedSales = results.reduce((acc, sale) => {
       const date = sale.data.toLocaleDateString("pt-BR");
       if (!acc[date]) {
@@ -171,6 +238,7 @@ app.get("/salesReport", (req, res) => {
       return acc;
     }, {});
 
+    res.setHeader("Content-Type", "application/json");
     res.status(200).json(groupedSales);
   });
 });
@@ -182,9 +250,12 @@ app.get("/inventoryReport", (req, res) => {
   db.query(sql, (err, results) => {
     if (err) {
       console.error("Erro ao buscar relatório de estoque:", err);
-      return res.status(500).send("Erro ao buscar relatório de estoque.");
+      return res
+        .status(500)
+        .json({ error: "Erro ao buscar relatório de estoque." });
     }
 
+    res.setHeader("Content-Type", "application/json");
     res.status(200).json(results);
   });
 });

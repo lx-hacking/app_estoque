@@ -3,6 +3,7 @@ import {
   View,
   Text,
   TouchableOpacity,
+  TextInput,
   StyleSheet,
   FlatList,
   Image,
@@ -12,11 +13,12 @@ import { Ionicons } from "@expo/vector-icons";
 
 const InventoryScreen = ({ navigation }) => {
   const [products, setProducts] = useState([]);
+  const [filteredProducts, setFilteredProducts] = useState([]);
+  const [searchQuery, setSearchQuery] = useState("");
   const [selectedProducts, setSelectedProducts] = useState([]);
-  const [sortField, setSortField] = useState("nome"); // Campo de ordenação inicial
-  const [sortDirection, setSortDirection] = useState("asc"); // Direção da ordenação inicial
+  const [sortField, setSortField] = useState("nome");
+  const [sortDirection, setSortDirection] = useState("asc");
 
-  // Função para buscar produtos do backend
   const fetchProducts = async () => {
     try {
       const response = await fetch("http://localhost:3000/products");
@@ -24,28 +26,23 @@ const InventoryScreen = ({ navigation }) => {
         throw new Error("Erro ao buscar produtos");
       }
       const data = await response.json();
-      // Ordena os produtos por nome de forma crescente como padrão
       const sortedData = data.sort((a, b) => a.nome.localeCompare(b.nome));
       setProducts(sortedData);
+      setFilteredProducts(sortedData);
     } catch (error) {
       console.error("Erro ao buscar produtos:", error);
     }
   };
 
-  // useEffect para carregar a lista de produtos ao montar o componente
   useEffect(() => {
     fetchProducts();
-
-    // Listener para atualizar a lista sempre que a tela ganha foco
     const unsubscribe = navigation.addListener("focus", () => {
       fetchProducts();
-      setSelectedProducts([]); // Reseta a seleção ao voltar para Inventory
+      setSelectedProducts([]);
     });
-
     return unsubscribe;
   }, [navigation]);
 
-  // Função para lidar com a seleção de itens
   const handleSelectProduct = (product) => {
     if (selectedProducts.includes(product)) {
       setSelectedProducts(
@@ -56,24 +53,21 @@ const InventoryScreen = ({ navigation }) => {
     }
   };
 
-  // Função para editar os produtos selecionados
   const handleEditProduct = () => {
     if (selectedProducts.length === 0) {
       Alert.alert("Aviso", "Selecione pelo menos um produto para editar.");
       return;
     }
-
     navigation.navigate("EditProduct", { products: selectedProducts });
   };
 
-  // Função para ordenar os produtos com base no campo e direção
   const sortProducts = (field) => {
     const direction =
       sortField === field && sortDirection === "asc" ? "desc" : "asc";
     setSortField(field);
     setSortDirection(direction);
 
-    const sortedProducts = [...products].sort((a, b) => {
+    const sortedProducts = [...filteredProducts].sort((a, b) => {
       if (direction === "asc") {
         return a[field] > b[field] ? 1 : -1;
       } else {
@@ -81,34 +75,92 @@ const InventoryScreen = ({ navigation }) => {
       }
     });
 
-    setProducts(sortedProducts);
+    setFilteredProducts(sortedProducts);
   };
 
-  // Função para renderizar cada item da lista de produtos
+  const handleSearch = (text) => {
+    setSearchQuery(text);
+    if (text === "") {
+      setFilteredProducts(products);
+    } else {
+      const filtered = products.filter(
+        (product) =>
+          product.nome.toLowerCase().includes(text.toLowerCase()) ||
+          product.descricao.toLowerCase().includes(text.toLowerCase()) ||
+          product.valor_venda.toString().includes(text) ||
+          product.preco_custo.toString().includes(text) ||
+          product.quantidade.toString().includes(text)
+      );
+      setFilteredProducts(filtered);
+    }
+  };
+
+  const resetSearch = () => {
+    setSearchQuery("");
+    setFilteredProducts(products);
+  };
+
   const renderProduct = ({ item }) => {
     const isSelected = selectedProducts.includes(item);
-    const isLowQuantity = item.quantidade < 10; // Verifica se a quantidade é menor que 10
+    const isLowQuantity = item.quantidade < 10;
 
     return (
       <TouchableOpacity
         style={[styles.productRow, isSelected && styles.selectedRow]}
         onPress={() => handleSelectProduct(item)}
       >
-        <View style={[styles.column, { width: "20%" }]}>
+        <View style={[styles.column, styles.borderRight, { width: "10%" }]}>
           <Image
             source={{ uri: `data:image/jpeg;base64,${item.imagem}` }}
             style={styles.productImage}
           />
         </View>
-        <Text style={[styles.productText, { width: "35%" }]}>{item.nome}</Text>
-        <Text style={[styles.productText, { width: "35%" }]}>
-          {item.descricao}
+        <Text
+          style={[
+            styles.productText,
+            styles.leftAlignedText,
+            styles.borderRight,
+            { width: "30%" },
+          ]}
+        >
+          {item.nome}
         </Text>
         <Text
           style={[
             styles.productText,
-            { width: "10%" },
-            isLowQuantity && styles.lowQuantity, // Aplica estilo se quantidade for baixa
+            styles.centerAlignedText,
+            styles.borderRight,
+            { width: "20%" },
+          ]}
+        >
+          Frasco de {item.descricao}
+        </Text>
+        <Text
+          style={[
+            styles.productText,
+            styles.centerAlignedText,
+            styles.borderRight,
+            { width: "13.33%" },
+          ]}
+        >
+          {parseFloat(item.valor_venda).toFixed(2)}
+        </Text>
+        <Text
+          style={[
+            styles.productText,
+            styles.centerAlignedText,
+            styles.borderRight,
+            { width: "13.33%" },
+          ]}
+        >
+          {parseFloat(item.preco_custo).toFixed(2)}
+        </Text>
+        <Text
+          style={[
+            styles.productText,
+            styles.centerAlignedText,
+            { width: "13.33%" },
+            isLowQuantity && styles.lowQuantity,
           ]}
         >
           {item.quantidade}
@@ -117,7 +169,72 @@ const InventoryScreen = ({ navigation }) => {
     );
   };
 
-  // Função para renderizar o ícone de ordenação
+  const renderHeader = () => (
+    <View style={styles.header}>
+      <Text
+        style={[
+          styles.headerText,
+          styles.centerAlignedText,
+          styles.borderRight,
+          { width: "10%" },
+        ]}
+      >
+        Foto
+      </Text>
+      <TouchableOpacity
+        style={[
+          styles.headerTextContainer,
+          styles.borderRight,
+          { width: "30%" },
+        ]}
+        onPress={() => sortProducts("nome")}
+      >
+        <Text style={styles.headerText}>Nome</Text>
+        {renderSortIcon("nome")}
+      </TouchableOpacity>
+      <TouchableOpacity
+        style={[
+          styles.headerTextContainer,
+          styles.borderRight,
+          { width: "20%" },
+        ]}
+        onPress={() => sortProducts("descricao")}
+      >
+        <Text style={styles.headerText}>Descrição</Text>
+        {renderSortIcon("descricao")}
+      </TouchableOpacity>
+      <TouchableOpacity
+        style={[
+          styles.headerTextContainer,
+          styles.borderRight,
+          { width: "13.33%" },
+        ]}
+        onPress={() => sortProducts("valor_venda")}
+      >
+        <Text style={styles.headerText}>Valor</Text>
+        {renderSortIcon("valor_venda")}
+      </TouchableOpacity>
+      <TouchableOpacity
+        style={[
+          styles.headerTextContainer,
+          styles.borderRight,
+          { width: "13.33%" },
+        ]}
+        onPress={() => sortProducts("preco_custo")}
+      >
+        <Text style={styles.headerText}>Custo</Text>
+        {renderSortIcon("preco_custo")}
+      </TouchableOpacity>
+      <TouchableOpacity
+        style={[styles.headerTextContainer, { width: "13.33%" }]}
+        onPress={() => sortProducts("quantidade")}
+      >
+        <Text style={styles.headerText}>Qtd</Text>
+        {renderSortIcon("quantidade")}
+      </TouchableOpacity>
+    </View>
+  );
+
   const renderSortIcon = (field) => {
     if (sortField !== field) return null;
     return sortDirection === "asc" ? (
@@ -128,13 +245,14 @@ const InventoryScreen = ({ navigation }) => {
   };
 
   return (
-    <View style={styles.container}>
+    <View style={styles.outerContainer}>
+      {/* Botões fora do container branco */}
       <View style={styles.buttonContainer}>
         <TouchableOpacity
           style={styles.button}
           onPress={() => navigation.navigate("AddProduct")}
         >
-          <Ionicons name="add-circle-outline" size={28} color="#fff" />
+          <Ionicons name="add-circle-outline" size={20} color="#fff" />
           <Text style={styles.buttonText}>Cadastrar</Text>
         </TouchableOpacity>
 
@@ -144,92 +262,108 @@ const InventoryScreen = ({ navigation }) => {
             selectedProducts.length === 0 && styles.disabledButton,
           ]}
           onPress={handleEditProduct}
-          disabled={selectedProducts.length === 0} // Habilita o botão ao selecionar pelo menos um item
+          disabled={selectedProducts.length === 0}
         >
-          <Ionicons name="create-outline" size={28} color="#fff" />
+          <Ionicons name="create-outline" size={20} color="#fff" />
           <Text style={styles.buttonText}>Editar</Text>
         </TouchableOpacity>
       </View>
 
-      <View style={styles.header}>
-        <Text style={[styles.headerText, { width: "20%" }]}>Imagem</Text>
-        <TouchableOpacity
-          style={[
-            styles.headerText,
-            {
-              width: "35%",
-              flexDirection: "row",
-              justifyContent: "center",
-              alignItems: "center",
-            },
-          ]}
-          onPress={() => sortProducts("nome")}
-        >
-          <Text style={styles.sortableText}>Nome</Text>
-          {renderSortIcon("nome")}
-        </TouchableOpacity>
-        <Text
-          style={[styles.headerText, { width: "35%", textAlign: "center" }]}
-        >
-          Descrição
-        </Text>
-        <TouchableOpacity
-          style={[
-            styles.headerText,
-            {
-              width: "10%",
-              flexDirection: "row",
-              justifyContent: "center",
-              alignItems: "center",
-            },
-          ]}
-          onPress={() => sortProducts("quantidade")}
-        >
-          <Text style={styles.sortableText}>Qtd</Text>
-          {renderSortIcon("quantidade")}
-        </TouchableOpacity>
-      </View>
+      {/* Container branco com campo de busca e lista */}
+      <View style={styles.container}>
+        <View style={styles.listContainer}>
+          <View style={styles.searchContainer}>
+            <Ionicons
+              name="search"
+              size={20}
+              color="#888"
+              style={styles.searchIcon}
+            />
+            <TextInput
+              style={styles.searchInput}
+              placeholder="Buscar produto"
+              value={searchQuery}
+              onChangeText={handleSearch}
+              autoCorrect={false}
+              autoCapitalize="none"
+              keyboardType="default"
+              returnKeyType="done"
+            />
+            {searchQuery.length > 0 && (
+              <TouchableOpacity onPress={resetSearch} style={styles.resetIcon}>
+                <Ionicons name="close-circle" size={20} color="#888" />
+              </TouchableOpacity>
+            )}
+          </View>
 
-      <FlatList
-        data={products}
-        keyExtractor={(item) => item.id.toString()}
-        renderItem={renderProduct}
-        contentContainerStyle={styles.listContainer}
-        ListEmptyComponent={<Text>Nenhum produto cadastrado.</Text>}
-        showsVerticalScrollIndicator={false}
-      />
+          <FlatList
+            data={filteredProducts}
+            keyExtractor={(item) => item.id.toString()}
+            renderItem={renderProduct}
+            ListHeaderComponent={renderHeader}
+            contentContainerStyle={styles.flatListContainer}
+            ListEmptyComponent={<Text>Nenhum produto cadastrado.</Text>}
+            showsVerticalScrollIndicator={false}
+          />
+        </View>
+      </View>
     </View>
   );
 };
 
 const styles = StyleSheet.create({
+  outerContainer: {
+    flex: 1,
+    backgroundColor: "#f9f9f9", // Cor de fundo cinza semelhante à tela do relatório
+    padding: 10,
+  },
   container: {
     flex: 1,
-    padding: 20,
     backgroundColor: "#fff",
+    borderRadius: 8,
+    overflow: "hidden",
+    padding: 10,
+  },
+  searchContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    borderWidth: 1,
+    borderColor: "#ddd",
+    borderRadius: 8,
+    padding: 5,
+    marginBottom: 10,
+  },
+  searchIcon: {
+    marginRight: 10,
+  },
+  searchInput: {
+    flex: 1,
+    marginLeft: 10,
+    fontSize: 14,
+  },
+  resetIcon: {
+    marginLeft: 10,
   },
   buttonContainer: {
     flexDirection: "row",
     justifyContent: "space-between",
-    alignItems: "center",
-    width: "100%",
-    paddingHorizontal: 20,
-    marginBottom: 20,
+    marginBottom: 10,
   },
   button: {
+    flex: 1,
     backgroundColor: "tomato",
-    padding: 15,
-    borderRadius: 10,
-    width: 100,
-    height: 100,
-    justifyContent: "center",
+    paddingVertical: 5,
+    paddingHorizontal: 15,
+    borderRadius: 8,
     alignItems: "center",
+    marginHorizontal: 5,
+    flexDirection: "row",
+    justifyContent: "center",
   },
   buttonText: {
     color: "#fff",
-    fontSize: 14,
-    marginTop: 5,
-    textAlign: "center",
+    fontWeight: "bold",
+    marginLeft: 5,
   },
   disabledButton: {
     backgroundColor: "#ccc",
@@ -237,21 +371,26 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: "row",
     justifyContent: "space-around",
-    padding: 10,
+    paddingVertical: 10,
     backgroundColor: "#f1f1f1",
-    marginTop: 20,
+    borderBottomWidth: 0.5,
+    borderBottomColor: "#ccc",
+  },
+  headerTextContainer: {
+    flexDirection: "row",
+    justifyContent: "center",
+    alignItems: "center",
   },
   headerText: {
     fontSize: 14,
     fontWeight: "bold",
     textAlign: "center",
   },
-  sortableText: {
-    fontSize: 14,
-    fontWeight: "bold",
-    color: "tomato",
-  },
   listContainer: {
+    flex: 1,
+    marginTop: 10,
+  },
+  flatListContainer: {
     paddingVertical: 10,
   },
   productRow: {
@@ -260,6 +399,7 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     borderBottomWidth: 1,
     borderBottomColor: "#ddd",
+    paddingLeft: 5,
   },
   selectedRow: {
     backgroundColor: "#e0f7fa",
@@ -274,10 +414,19 @@ const styles = StyleSheet.create({
     borderRadius: 5,
   },
   productText: {
-    textAlign: "center",
-    justifyContent: "center",
-    alignItems: "center",
     fontSize: 14,
+    paddingHorizontal: 5,
+  },
+  leftAlignedText: {
+    textAlign: "left",
+    paddingLeft: 5,
+  },
+  centerAlignedText: {
+    textAlign: "center",
+  },
+  borderRight: {
+    borderRightWidth: 0.5,
+    borderRightColor: "#ccc",
   },
   lowQuantity: {
     color: "red",

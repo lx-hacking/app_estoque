@@ -8,18 +8,20 @@ import {
   TouchableOpacity,
   Image,
   Modal,
+  Alert,
 } from "react-native";
 import * as ImagePicker from "expo-image-picker";
+import { Picker } from "@react-native-picker/picker"; // Corrigindo a importação do Picker
 
 const AddProduct = ({ navigation }) => {
   const [productName, setProductName] = useState("");
-  const [productDescription, setProductDescription] = useState("");
+  const [productVolume, setProductVolume] = useState("10ml"); // Estado para o volume selecionado
   const [productValue, setProductValue] = useState("");
   const [productQuantity, setProductQuantity] = useState("");
   const [productCost, setProductCost] = useState("");
   const [image, setImage] = useState(null);
   const [base64Image, setBase64Image] = useState(null);
-  const [showSuccessModal, setShowSuccessModal] = useState(false); // Estado para o modal de sucesso
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
 
   const pickImage = async () => {
     let result = await ImagePicker.launchImageLibraryAsync({
@@ -49,7 +51,7 @@ const AddProduct = ({ navigation }) => {
 
     const data = {
       nome: productName,
-      descricao: productDescription,
+      descricao: productVolume, // Salva o volume selecionado na descrição
       valor_venda: productValue,
       quantidade: productQuantity,
       preco_custo: productCost,
@@ -71,7 +73,6 @@ const AddProduct = ({ navigation }) => {
         return;
       }
 
-      // Exibe o modal de sucesso e reseta o formulário
       setShowSuccessModal(true);
       resetForm();
     } catch (error) {
@@ -81,7 +82,7 @@ const AddProduct = ({ navigation }) => {
 
   const resetForm = () => {
     setProductName("");
-    setProductDescription("");
+    setProductVolume("10ml");
     setProductValue("");
     setProductQuantity("");
     setProductCost("");
@@ -119,14 +120,17 @@ const AddProduct = ({ navigation }) => {
         returnKeyType="done"
       />
 
-      <Text style={styles.label}>Descrição</Text>
-      <TextInput
-        style={styles.input}
-        placeholder="Digite a descrição"
-        value={productDescription}
-        onChangeText={setProductDescription}
-        returnKeyType="done"
-      />
+      <Text style={styles.label}>Volume do frasco</Text>
+      <View style={styles.pickerContainer}>
+        <Picker
+          selectedValue={productVolume}
+          onValueChange={(itemValue) => setProductVolume(itemValue)}
+          style={styles.picker}
+        >
+          <Picker.Item label="10ml" value="10ml" />
+          <Picker.Item label="100ml" value="100ml" />
+        </Picker>
+      </View>
 
       <Text style={styles.label}>Valor de venda</Text>
       <TextInput
@@ -188,6 +192,15 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     borderRadius: 5,
     marginBottom: 10,
+  },
+  pickerContainer: {
+    borderColor: "#ccc",
+    borderWidth: 1,
+    borderRadius: 5,
+    marginBottom: 10,
+  },
+  picker: {
+    height: 40,
   },
   imagePicker: {
     alignItems: "center",

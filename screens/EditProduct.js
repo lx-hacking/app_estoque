@@ -8,23 +8,27 @@ import {
   StyleSheet,
   Image,
   Modal,
+  Alert,
 } from "react-native";
 import * as ImagePicker from "expo-image-picker";
+import { Picker } from "@react-native-picker/picker"; // Importando Picker para o dropdown
 
 const EditProduct = ({ route, navigation }) => {
-  const { products } = route.params; // Recebe os produtos selecionados da tela anterior
+  const { products } = route.params;
   const [editableProducts, setEditableProducts] = useState(
     products.map((product) => ({
       ...product,
-      newImage: null, // Campo para armazenar a nova imagem selecionada
+      newImage: null,
     }))
   );
-  const [modalVisible, setModalVisible] = useState(false); // Estado para controlar a visibilidade do modal
+  const [modalVisible, setModalVisible] = useState(false);
+  const [deleteModalVisible, setDeleteModalVisible] = useState(false);
+  const [productToDelete, setProductToDelete] = useState(null);
 
   // Função para lidar com a mudança de valores nos campos editáveis
-  const handleInputChange = (text, index, field) => {
+  const handleInputChange = (value, index, field) => {
     const updatedProducts = [...editableProducts];
-    updatedProducts[index][field] = text;
+    updatedProducts[index][field] = value;
     setEditableProducts(updatedProducts);
   };
 
@@ -39,7 +43,7 @@ const EditProduct = ({ route, navigation }) => {
 
     if (!result.canceled) {
       const updatedProducts = [...editableProducts];
-      updatedProducts[index].newImage = result.assets[0].uri; // Armazena o URI da nova imagem
+      updatedProducts[index].newImage = result.assets[0].uri;
       setEditableProducts(updatedProducts);
     }
   };
@@ -47,12 +51,10 @@ const EditProduct = ({ route, navigation }) => {
   // Função para salvar as alterações no banco de dados
   const handleSave = async () => {
     try {
-      // Prepara os produtos para envio ao backend, incluindo a conversão da imagem para base64
       const updatedProducts = await Promise.all(
         editableProducts.map(async (product) => {
-          let imageBase64 = product.imagem; // Imagem atual do produto em base64
+          let imageBase64 = product.imagem;
 
-          // Se uma nova imagem foi selecionada, converte-a para base64
           if (product.newImage) {
             const response = await fetch(product.newImage);
             const blob = await response.blob();
@@ -66,12 +68,11 @@ const EditProduct = ({ route, navigation }) => {
 
           return {
             ...product,
-            imagem: imageBase64, // Atualiza a imagem para enviar ao backend
+            imagem: imageBase64,
           };
         })
       );
 
-      // Envia os produtos atualizados para o backend
       const response = await fetch("http://localhost:3000/updateproducts", {
         method: "POST",
         headers: {
@@ -84,7 +85,6 @@ const EditProduct = ({ route, navigation }) => {
         throw new Error("Erro ao salvar alterações");
       }
 
-      // Exibe o modal de sucesso
       setModalVisible(true);
     } catch (error) {
       console.error("Erro ao salvar produtos:", error);
@@ -92,7 +92,38 @@ const EditProduct = ({ route, navigation }) => {
     }
   };
 
-  // Função para fechar o modal e redirecionar para a tela de Inventory
+  // Função para abrir o modal de confirmação de exclusão
+  const confirmDelete = (product) => {
+    setProductToDelete(product);
+    setDeleteModalVisible(true);
+  };
+
+  // Função para deletar o produto do banco de dados
+  const handleDelete = async () => {
+    if (!productToDelete) return;
+
+    try {
+      const response = await fetch(
+        `http://localhost:3000/deleteproduct/${productToDelete.id}`,
+        {
+          method: "DELETE",
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error("Erro ao deletar o produto");
+      }
+
+      setDeleteModalVisible(false);
+      Alert.alert("Produto deletado com sucesso.");
+      navigation.navigate("Inventory"); // Volta para a tela de inventário após a exclusão
+    } catch (error) {
+      console.error("Erro ao deletar produto:", error);
+      Alert.alert("Erro", "Não foi possível deletar o produto.");
+    }
+  };
+
+  // Função para fechar o modal de sucesso
   const handleModalClose = () => {
     setModalVisible(false);
     setEditableProducts(
@@ -100,11 +131,10 @@ const EditProduct = ({ route, navigation }) => {
         ...product,
         newImage: null,
       }))
-    ); // Reseta os produtos para o estado inicial
-    navigation.goBack(); // Fecha a tela de EditProduct após o modal
+    );
+    navigation.goBack();
   };
 
-  // Limpa os dados ao sair da tela
   useEffect(() => {
     const unsubscribe = navigation.addListener("beforeRemove", () => {
       setEditableProducts(
@@ -115,12 +145,13 @@ const EditProduct = ({ route, navigation }) => {
       );
     });
 
-    return unsubscribe; // Remove o listener quando o componente é desmontado
+    return unsubscribe;
   }, [navigation]);
 
-  // Renderiza cada produto na lista com campos editáveis
   const renderProduct = ({ item, index }) => (
     <View style={styles.productContainer}>
+      {/* Adiciona o título da seção com numeração dos produtos */}
+      <Text style={styles.sectionTitle}>Produto {index + 1}</Text>
       <TouchableOpacity onPress={() => pickImage(index)}>
         {item.newImage ? (
           <Image source={{ uri: item.newImage }} style={styles.image} />
@@ -139,13 +170,19 @@ const EditProduct = ({ route, navigation }) => {
         onChangeText={(text) => handleInputChange(text, index, "nome")}
         placeholder="Nome"
       />
-      <Text style={styles.label}>Descrição</Text>
-      <TextInput
-        style={styles.input}
-        value={item.descricao}
-        onChangeText={(text) => handleInputChange(text, index, "descricao")}
-        placeholder="Descrição"
-      />
+      <Text style={styles.label}>Volume do Frasco</Text>
+      <View style={styles.pickerContainer}>
+        <Picker
+          selectedValue={item.descricao}
+          onValueChange={(value) =>
+            handleInputChange(value, index, "descricao")
+          }
+          style={styles.picker}
+        >
+          <Picker.Item label="10ml" value="10ml" />
+          <Picker.Item label="100ml" value="100ml" />
+        </Picker>
+      </View>
       <Text style={styles.label}>Valor</Text>
       <TextInput
         style={styles.input}
@@ -162,7 +199,7 @@ const EditProduct = ({ route, navigation }) => {
         placeholder="Quantidade"
         keyboardType="numeric"
       />
-      <Text style={styles.label}>Custo</Text>
+      <Text style={styles.label}>Preço de Custo</Text>
       <TextInput
         style={styles.input}
         value={item.preco_custo.toString()}
@@ -181,9 +218,17 @@ const EditProduct = ({ route, navigation }) => {
         renderItem={renderProduct}
         ListEmptyComponent={<Text>Nenhum produto para editar.</Text>}
       />
-      <TouchableOpacity style={styles.saveButton} onPress={handleSave}>
-        <Text style={styles.saveButtonText}>Salvar</Text>
-      </TouchableOpacity>
+      <View style={styles.buttonContainer}>
+        <TouchableOpacity
+          style={styles.deleteButton}
+          onPress={() => confirmDelete(editableProducts[0])}
+        >
+          <Text style={styles.deleteButtonText}>Deletar</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.saveButton} onPress={handleSave}>
+          <Text style={styles.saveButtonText}>Salvar</Text>
+        </TouchableOpacity>
+      </View>
 
       {/* Modal para exibir mensagem de sucesso */}
       <Modal
@@ -196,11 +241,41 @@ const EditProduct = ({ route, navigation }) => {
           <View style={styles.modalView}>
             <Text style={styles.modalText}>Alterações feitas com sucesso!</Text>
             <TouchableOpacity
-              style={styles.modalButton}
+              style={[styles.modalButton, styles.successButton]}
               onPress={handleModalClose}
             >
-              <Text style={styles.modalButtonText}>OK</Text>
+              <Text style={styles.successButtonText}>OK</Text>
             </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+
+      {/* Modal de confirmação de exclusão */}
+      <Modal
+        animationType="slide"
+        transparent={true}
+        visible={deleteModalVisible}
+        onRequestClose={() => setDeleteModalVisible(false)}
+      >
+        <View style={styles.modalContainer}>
+          <View style={styles.modalView}>
+            <Text style={styles.modalText}>
+              Deseja mesmo deletar esse produto?
+            </Text>
+            <View style={styles.modalButtonContainer}>
+              <TouchableOpacity
+                style={[styles.modalButton, { backgroundColor: "red" }]}
+                onPress={handleDelete}
+              >
+                <Text style={styles.modalButtonText}>Deletar</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.modalButton, { backgroundColor: "blue" }]}
+                onPress={() => setDeleteModalVisible(false)}
+              >
+                <Text style={styles.modalButtonText}>Cancelar</Text>
+              </TouchableOpacity>
+            </View>
           </View>
         </View>
       </Modal>
@@ -214,6 +289,12 @@ const styles = StyleSheet.create({
     padding: 20,
     backgroundColor: "#fff",
   },
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: "bold",
+    marginBottom: 10,
+    color: "#333",
+  },
   productContainer: {
     marginBottom: 20,
     padding: 10,
@@ -225,6 +306,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
     marginBottom: 5,
     color: "#333",
+    fontWeight: "bold",
   },
   input: {
     height: 40,
@@ -233,6 +315,15 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     borderRadius: 5,
     marginBottom: 10,
+  },
+  pickerContainer: {
+    borderColor: "#ccc",
+    borderWidth: 1,
+    borderRadius: 5,
+    marginBottom: 10,
+  },
+  picker: {
+    height: 40,
   },
   image: {
     width: 100,
@@ -245,11 +336,32 @@ const styles = StyleSheet.create({
     textAlign: "center",
     marginBottom: 10,
   },
-  saveButton: {
-    backgroundColor: "tomato",
+  buttonContainer: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginVertical: 20,
+    gap: 20, // Dobra o espaço entre os botões
+  },
+  deleteButton: {
+    backgroundColor: "red",
     padding: 15,
     borderRadius: 10,
     alignItems: "center",
+    flex: 1,
+    marginRight: 10,
+  },
+  deleteButtonText: {
+    color: "#fff",
+    fontSize: 16,
+    fontWeight: "bold",
+  },
+  saveButton: {
+    backgroundColor: "#4BB543",
+    padding: 15,
+    borderRadius: 10,
+    alignItems: "center",
+    flex: 1,
+    marginLeft: 10,
   },
   saveButtonText: {
     color: "#fff",
@@ -275,10 +387,24 @@ const styles = StyleSheet.create({
     textAlign: "center",
     color: "#4BB543",
   },
+  modalButtonContainer: {
+    flexDirection: "row",
+    gap: 10,
+  },
   modalButton: {
-    backgroundColor: "#4BB543",
     padding: 10,
     borderRadius: 5,
+    alignItems: "center",
+  },
+  successButton: {
+    backgroundColor: "#4BB543", // Mesma cor verde da mensagem de sucesso
+    padding: 10,
+    borderRadius: 5,
+    alignItems: "center",
+  },
+  successButtonText: {
+    color: "white", // Texto branco para melhor contraste
+    fontWeight: "bold",
   },
   modalButtonText: {
     color: "white",
