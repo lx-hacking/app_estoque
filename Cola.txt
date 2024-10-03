@@ -1,26 +1,10 @@
+Segue meu server.js:
 const express = require("express");
 const mysql = require("mysql");
 const cors = require("cors");
-const http = require("http"); // Para utilizar WebSocket com o servidor HTTP
-const WebSocket = require("ws");
 
 const app = express();
 const port = 3000;
-
-// Criação do servidor HTTP
-const server = http.createServer(app);
-
-// Criação do WebSocket Server
-const wss = new WebSocket.Server({ server });
-
-// Função para enviar mensagem via WebSocket para todos os clientes
-const broadcastStockUpdate = () => {
-  wss.clients.forEach((client) => {
-    if (client.readyState === WebSocket.OPEN) {
-      client.send(JSON.stringify({ type: "UPDATE_STOCK" }));
-    }
-  });
-};
 
 // Configuração do banco de dados MySQL
 const db = mysql.createConnection({
@@ -76,9 +60,6 @@ app.post("/addproduct", (req, res) => {
             .json({ error: `Erro ao inserir produto: ${err.message}` });
         }
         res.status(201).json({ message: "Produto salvo com sucesso!" });
-
-        // Notifica todos os clientes via WebSocket
-        broadcastStockUpdate();
       }
     );
   } catch (error) {
@@ -86,22 +67,7 @@ app.post("/addproduct", (req, res) => {
     res.status(500).json({ error: `Erro inesperado: ${error.message}` });
   }
 });
-// Endpoint para buscar o relatório de estoque
-app.get("/inventoryReport", (req, res) => {
-  const sql = `SELECT nome, descricao, quantidade FROM produtos ORDER BY nome ASC`;
 
-  db.query(sql, (err, results) => {
-    if (err) {
-      console.error("Erro ao buscar relatório de estoque:", err);
-      return res
-        .status(500)
-        .json({ error: "Erro ao buscar relatório de estoque." });
-    }
-
-    res.setHeader("Content-Type", "application/json");
-    res.status(200).json(results);
-  });
-});
 // Endpoint para buscar todos os produtos
 app.get("/products", (req, res) => {
   const sql = `SELECT id, nome, descricao, valor_venda, quantidade, preco_custo, imagem FROM produtos`;
@@ -169,12 +135,7 @@ app.post("/updateproducts", (req, res) => {
   });
 
   Promise.all(updatePromises)
-    .then(() => {
-      res.json({ message: "Produtos atualizados com sucesso!" });
-
-      // Notifica todos os clientes via WebSocket
-      broadcastStockUpdate();
-    })
+    .then(() => res.json({ message: "Produtos atualizados com sucesso!" }))
     .catch((error) =>
       res.status(500).json({ error: `Erro ao atualizar produtos: ${error}` })
     );
@@ -191,79 +152,161 @@ app.delete("/deleteproduct/:id", (req, res) => {
       return res.status(500).json({ error: "Erro ao deletar produto." });
     }
     res.status(200).json({ message: "Produto deletado com sucesso!" });
-
-    // Notifica todos os clientes via WebSocket
-    broadcastStockUpdate();
   });
 });
 
-// Novo endpoint para finalizar a compra e salvar a venda
-app.post("/finalizarVenda", (req, res) => {
+// Endpoint para atualizar o estoque após finalizar a compra e salvar a venda
+app.post("/updateStock", (req, res) => {
   const { items } = req.body;
 
   if (!items || items.length === 0) {
-    return res.status(400).json({ error: "Nenhum item para processar." });
+    return res.status(400).json({ error: "Nenhum item para atualizar." });
   }
 
   const updatePromises = items.map((item) => {
     return new Promise((resolve, reject) => {
-      const sqlUpdate = `UPDATE produtos SET quantidade = quantidade - ? WHERE id = ? AND quantidade >= ?`;
-      db.query(
-        sqlUpdate,
-        [item.quantity, item.id, item.quantity],
-        (err, result) => {
-          if (err) {
-            console.error(
-              `Erro ao atualizar o estoque do produto ${item.nome}:`,
-              err
-            );
-            return reject(
-              `Erro ao atualizar o estoque do produto ${item.nome}`
-            );
-          }
-          if (result.affectedRows === 0) {
-            return reject(`Estoque insuficiente para o produto ${item.nome}`);
-          }
-
-          const sqlInsertVenda = `INSERT INTO vendas (produto_id, quantidade, valor_venda, data_hora) VALUES (?, ?, ?, NOW())`;
-          db.query(
-            sqlInsertVenda,
-            [item.id, item.quantity, item.valor_venda],
-            (err) => {
-              if (err) {
-                console.error(
-                  `Erro ao registrar venda para o produto ${item.nome}:`,
-                  err
-                );
-                return reject(
-                  `Erro ao registrar venda para o produto ${item.nome}`
-                );
-              }
-              resolve();
-            }
-          );
+      const sqlUpdate = `UPDATE produtos SET quantidade = quantidade - ? WHERE id = ?`;
+      db.query(sqlUpdate, [item.count, item.id], (err) => {
+        if (err) {
+          console.error(`Erro ao atualizar o produto ${item.nome}:`, err);
+          return reject(`Erro ao atualizar o produto ${item.nome}`);
         }
-      );
+
+        const sqlInsertVenda = `INSERT INTO vendas (produto_id, quantidade, valor_venda, data_hora) VALUES (?, ?, ?, NOW())`;
+        db.query(
+          sqlInsertVenda,
+          [item.id, item.count, item.valor_venda],
+          (err) => {
+            if (err) {
+              console.error(
+                `Erro ao registrar venda para o produto ${item.nome}:`,
+                err
+              );
+              return reject(
+                `Erro ao registrar venda para o produto ${item.nome}`
+              );
+            }
+            resolve();
+          }
+        );
+      });
     });
   });
 
   Promise.all(updatePromises)
     .then(() => {
       res.status(200).json({
-        message: "Venda finalizada e estoque atualizado com sucesso.",
+        message: "Estoque atualizado e vendas registradas com sucesso.",
       });
-
-      // Notifica todos os clientes via WebSocket
-      broadcastStockUpdate();
     })
     .catch((error) => {
       res.status(500).json({
-        error: `Erro ao processar a venda: ${error}`,
+        error: `Erros ao atualizar produtos e registrar vendas: ${error}`,
       });
     });
 });
 
-// Inicia o servidor HTTP com suporte a WebSocket
-server.listen(port, () => {
+// Endpoint para buscar as vendas agrupadas por data para o relatório
+app.get("/salesReport", (req, res) => {
+  const sql = `
+    SELECT 
+      v.id, 
+      DATE(v.data_hora) AS data, 
+      p.nome AS produto, 
+      p.descricao AS descricao, 
+      v.quantidade, 
+      (v.quantidade * v.valor_venda) AS valor_total,
+      p.id AS produto_id
+    FROM vendas v
+    JOIN produtos p ON p.id = v.produto_id
+    ORDER BY v.data_hora DESC`;
+
+  db.query(sql, (err, results) => {
+    if (err) {
+      console.error("Erro ao buscar relatório de vendas:", err);
+      return res
+        .status(500)
+        .json({ error: "Erro ao buscar relatório de vendas." });
+    }
+
+    const groupedSales = results.reduce((acc, sale) => {
+      const date = sale.data.toLocaleDateString("pt-BR");
+      if (!acc[date]) {
+        acc[date] = { items: [], total: 0 };
+      }
+      acc[date].items.push(sale);
+      acc[date].total += sale.valor_total;
+      return acc;
+    }, {});
+
+    res.setHeader("Content-Type", "application/json");
+    res.status(200).json(groupedSales);
+  });
+});
+
+// Endpoint para buscar o relatório de estoque
+app.get("/inventoryReport", (req, res) => {
+  const sql = `SELECT nome, descricao, quantidade FROM produtos ORDER BY nome ASC`;
+
+  db.query(sql, (err, results) => {
+    if (err) {
+      console.error("Erro ao buscar relatório de estoque:", err);
+      return res
+        .status(500)
+        .json({ error: "Erro ao buscar relatório de estoque." });
+    }
+
+    res.setHeader("Content-Type", "application/json");
+    res.status(200).json(results);
+  });
+});
+
+// Inicia o servidor
+app.listen(port, () => {
   console.log(`Servidor rodando em http://localhost:${port}`);
 });
+
+
+
+segue meu MYSQL:
+
+-- Cria o banco de dados chamado appestoque
+CREATE DATABASE appestoque;
+
+-- Usa o banco de dados recém-criado
+USE appestoque;
+
+-- Cria a tabela produtos com os campos especificados
+CREATE TABLE produtos (
+    id INT AUTO_INCREMENT PRIMARY KEY,           -- ID único para cada produto
+    nome VARCHAR(255) NOT NULL,                  -- Nome do Produto
+    descricao TEXT,                              -- Descrição do Produto
+    valor_venda DECIMAL(10, 2) NOT NULL,         -- Valor de Venda do Produto
+    quantidade INT NOT NULL,                     -- Quantidade do Produto
+    preco_custo DECIMAL(10, 2) NOT NULL,         -- Preço de Custo do Produto
+    imagem LONGBLOB,                             -- Armazena a imagem do produto como arquivo
+    data_criacao TIMESTAMP DEFAULT CURRENT_TIMESTAMP -- Data de criação do registro
+);
+
+-- Visualiza a estrutura da tabela criada
+DESCRIBE produtos;
+
+-- Seleciona todos os registros da tabela produtos
+SELECT * FROM produtos;
+
+-- Conceder todas as permissões para o banco de dados appestoque ao usuário root
+GRANT ALL PRIVILEGES ON appestoque.* TO 'root'@'localhost';
+
+-- Atualizar as permissões para que as mudanças tenham efeito
+FLUSH PRIVILEGES;
+
+
+CREATE TABLE vendas (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  produto_id INT,
+  quantidade INT,
+  valor_venda DECIMAL(10, 2),
+  data_hora DATETIME,
+  FOREIGN KEY (produto_id) REFERENCES produtos(id)
+);
+select * from vendas;

@@ -1,9 +1,8 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import {
   View,
   Text,
   SectionList,
-  StyleSheet,
   TouchableOpacity,
   FlatList,
   TextInput,
@@ -13,7 +12,8 @@ import { Ionicons } from "@expo/vector-icons";
 import * as Sharing from "expo-sharing";
 import * as FileSystem from "expo-file-system";
 import XLSX from "xlsx";
-import RNHTMLtoPDF from "react-native-html-to-pdf";
+import ReportStyle from "./ReportStyle"; // Importa os estilos de um arquivo separado
+import { useFocusEffect } from "@react-navigation/native"; // Para detectar quando a tela está em foco
 
 const ReportScreen = ({ navigation }) => {
   const [activeReport, setActiveReport] = useState(null);
@@ -22,13 +22,67 @@ const ReportScreen = ({ navigation }) => {
   const [filteredInventoryData, setFilteredInventoryData] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [sortConfig, setSortConfig] = useState({ key: null, direction: "asc" });
+  const ws = useRef(null); // Usando WebSocket
 
-  React.useLayoutEffect(() => {
-    navigation.setOptions({
-      headerTitle: "Relatórios",
-      headerTitleAlign: "center",
-    });
-  }, [navigation]);
+  // Função para conectar ao WebSocket e ouvir atualizações de estoque
+  const connectWebSocket = () => {
+    ws.current = new WebSocket("ws://localhost:3000");
+
+    ws.current.onopen = () => {
+      console.log("Conectado ao WebSocket para atualizações de estoque.");
+    };
+
+    ws.current.onmessage = (e) => {
+      const message = JSON.parse(e.data);
+      if (message.type === "UPDATE_STOCK") {
+        fetchInventoryData(); // Atualiza os dados de estoque automaticamente
+      }
+    };
+
+    ws.current.onclose = () => {
+      console.log("Conexão ao WebSocket fechada. Tentando reconectar...");
+      setTimeout(connectWebSocket, 5000);
+    };
+
+    ws.current.onerror = (e) => {
+      console.error("Erro no WebSocket:", e.message);
+    };
+  };
+
+  // Fechar o WebSocket quando a tela não estiver mais em foco
+  useEffect(() => {
+    connectWebSocket();
+
+    return () => {
+      if (ws.current) {
+        ws.current.close();
+      }
+    };
+  }, []);
+
+  // Atualiza os dados de estoque automaticamente quando a tela está focada
+  useFocusEffect(
+    React.useCallback(() => {
+      if (activeReport === "inventory") {
+        fetchInventoryData(); // Recarrega os dados de estoque ao retornar à tela
+      }
+    }, [activeReport])
+  );
+
+  // Função para buscar o relatório de estoque
+  const fetchInventoryData = async () => {
+    try {
+      const response = await fetch("http://localhost:3000/inventoryReport");
+      if (!response.ok) {
+        throw new Error("Erro ao buscar relatório de estoque");
+      }
+      const data = await response.json();
+      setInventoryData(data);
+      setFilteredInventoryData(data); // Popula a lista filtrada com os dados recebidos
+    } catch (error) {
+      console.error("Erro ao buscar relatório de estoque:", error);
+    }
+  };
 
   const fetchSalesData = async () => {
     try {
@@ -48,49 +102,16 @@ const ReportScreen = ({ navigation }) => {
     }
   };
 
-  const fetchInventoryData = async () => {
-    try {
-      const response = await fetch("http://localhost:3000/inventoryReport");
-      if (!response.ok) {
-        throw new Error("Erro ao buscar relatório de estoque");
-      }
-      const data = await response.json();
-      setInventoryData(data);
-      setFilteredInventoryData(data);
-    } catch (error) {
-      console.error("Erro ao buscar relatório de estoque:", error);
-    }
-  };
-
-  const fetchFinancialReport = async () => {
-    try {
-      console.log("Buscando relatório financeiro...");
-    } catch (error) {
-      console.error("Erro ao buscar relatório financeiro:", error);
-    }
-  };
-
-  useEffect(() => {
-    if (activeReport === "sales") {
-      fetchSalesData();
-    } else if (activeReport === "inventory") {
-      fetchInventoryData();
-    } else if (activeReport === "financial") {
-      fetchFinancialReport();
-    }
-  }, [activeReport]);
-
+  // Função para ordenar os dados de estoque
   const sortInventoryData = (data, key, direction) => {
     return [...data].sort((a, b) => {
       let valueA = a[key];
       let valueB = b[key];
 
-      // Tratamento de ordenação específica para strings (alfabética) e números
       if (typeof valueA === "string" && typeof valueB === "string") {
         valueA = valueA.toLowerCase();
         valueB = valueB.toLowerCase();
       } else if (typeof valueA === "number" && typeof valueB === "number") {
-        // Comparação numérica
         valueA = parseFloat(valueA);
         valueB = parseFloat(valueB);
       }
@@ -107,7 +128,6 @@ const ReportScreen = ({ navigation }) => {
 
     setSortConfig({ key, direction: newDirection });
 
-    // Ordena a lista com base na nova configuração
     const sortedData = sortInventoryData(
       filteredInventoryData,
       key,
@@ -128,43 +148,27 @@ const ReportScreen = ({ navigation }) => {
     }
   };
 
-  const renderSaleItem = ({ item }) => (
-    <View style={styles.saleItem}>
-      <Text style={styles.saleProductName}>
-        Produto: <Text style={styles.boldText}>{item.produto}</Text>
-      </Text>
-      <Text style={styles.saleDescription}>Descrição: {item.descricao}</Text>
-      <Text style={styles.saleText}>Quantidade: {item.quantidade}</Text>
-      <Text style={styles.saleText}>
-        Valor Total: R$ {item.valor_total.toFixed(2)}
-      </Text>
-    </View>
-  );
-
-  const renderSectionHeader = ({ section }) => (
-    <View style={styles.sectionHeader}>
-      <Text style={styles.sectionTitle}>{section.title}</Text>
-      <Text style={styles.sectionTotal}>
-        Total: R$ {section.total.toFixed(2)}
-      </Text>
-    </View>
-  );
-
   const renderInventoryItem = ({ item }) => (
-    <View style={styles.inventoryRow}>
+    <View style={ReportStyle.inventoryRow}>
       <Text
-        style={[styles.inventoryColumn, styles.nameColumn, styles.boldText]}
+        style={[
+          ReportStyle.inventoryColumn,
+          ReportStyle.nameColumn,
+          ReportStyle.boldText,
+        ]}
       >
         {item.nome}
       </Text>
-      <Text style={[styles.inventoryColumn, styles.descriptionColumn]}>
+      <Text
+        style={[ReportStyle.inventoryColumn, ReportStyle.descriptionColumn]}
+      >
         {item.descricao}
       </Text>
       <Text
         style={[
-          styles.inventoryColumn,
-          styles.qtyColumn,
-          item.quantidade < 10 && styles.lowStock,
+          ReportStyle.inventoryColumn,
+          ReportStyle.qtyColumn,
+          item.quantidade < 10 && ReportStyle.lowStock,
         ]}
       >
         {item.quantidade}
@@ -172,50 +176,13 @@ const ReportScreen = ({ navigation }) => {
     </View>
   );
 
-  const getReportTitle = () => {
-    switch (activeReport) {
-      case "sales":
-        return "Vendas";
-      case "inventory":
-        return "Estoque";
-      case "financial":
-        return "Financeiro";
-      default:
-        return "";
-    }
-  };
-
-  const generatePDF = async () => {
-    const htmlContent = `
-      <h1>Relatório ${getReportTitle()}</h1>
-      <p>Conteúdo do relatório...</p>
-    `;
-
-    try {
-      const { uri } = await RNHTMLtoPDF.convert({
-        html: htmlContent,
-        fileName: `Relatorio_${getReportTitle()}`,
-        base64: true,
-      });
-
-      await Sharing.shareAsync(uri);
-    } catch (error) {
-      Alert.alert("Erro", "Não foi possível gerar o PDF.");
-    }
-  };
-
   const generateExcel = async () => {
     const worksheet = XLSX.utils.json_to_sheet(inventoryData);
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, "Relatório");
 
-    const wbout = XLSX.write(workbook, {
-      type: "base64",
-      bookType: "xlsx",
-    });
-
-    const uri =
-      FileSystem.cacheDirectory + `Relatorio_${getReportTitle()}.xlsx`;
+    const wbout = XLSX.write(workbook, { type: "base64", bookType: "xlsx" });
+    const uri = FileSystem.cacheDirectory + `Relatorio_${activeReport}.xlsx`;
 
     await FileSystem.writeAsStringAsync(uri, wbout, {
       encoding: FileSystem.EncodingType.Base64,
@@ -225,71 +192,55 @@ const ReportScreen = ({ navigation }) => {
   };
 
   return (
-    <View style={styles.container}>
-      <View style={styles.buttonContainer}>
+    <View style={ReportStyle.container}>
+      <View style={ReportStyle.buttonContainer}>
         <TouchableOpacity
-          style={styles.button}
+          style={ReportStyle.button}
           onPress={() => setActiveReport("sales")}
         >
           <Ionicons name="stats-chart" size={24} color="#fff" />
-          <Text style={styles.buttonText}>Vendas</Text>
+          <Text style={ReportStyle.buttonText}>Vendas</Text>
         </TouchableOpacity>
         <TouchableOpacity
-          style={styles.button}
+          style={ReportStyle.button}
           onPress={() => setActiveReport("inventory")}
         >
           <Ionicons name="cube" size={24} color="#fff" />
-          <Text style={styles.buttonText}>Estoque</Text>
+          <Text style={ReportStyle.buttonText}>Estoque</Text>
         </TouchableOpacity>
         <TouchableOpacity
-          style={styles.button}
+          style={ReportStyle.button}
           onPress={() => setActiveReport("financial")}
         >
           <Ionicons name="wallet" size={24} color="#fff" />
-          <Text style={styles.buttonText}>Financeiro</Text>
+          <Text style={ReportStyle.buttonText}>Financeiro</Text>
         </TouchableOpacity>
       </View>
 
       {activeReport && (
         <>
-          <View style={styles.titleAndIcons}>
-            <Text style={styles.reportTitle}>Relatório {getReportTitle()}</Text>
-            <View style={styles.iconContainer}>
-              <TouchableOpacity onPress={generatePDF} style={styles.iconButton}>
-                <Ionicons name="document" size={24} color="red" />
-                <Text style={styles.iconLabel}>PDF</Text>
-              </TouchableOpacity>
+          <View style={ReportStyle.titleAndIcons}>
+            <Text style={ReportStyle.reportTitle}>
+              Relatório {activeReport === "sales" ? "Vendas" : "Estoque"}
+            </Text>
+            <View style={ReportStyle.iconContainer}>
               <TouchableOpacity
                 onPress={generateExcel}
-                style={styles.iconButton}
+                style={ReportStyle.iconButton}
               >
                 <Ionicons name="document-text" size={24} color="green" />
-                <Text style={styles.iconLabel}>Excel</Text>
+                <Text style={ReportStyle.iconLabel}>Excel</Text>
               </TouchableOpacity>
             </View>
           </View>
 
-          <View style={styles.reportContainer}>
-            {activeReport === "sales" && (
-              <SectionList
-                sections={salesData}
-                keyExtractor={(item, index) => item.produto + index}
-                renderItem={renderSaleItem}
-                renderSectionHeader={renderSectionHeader}
-                ListEmptyComponent={
-                  <Text style={styles.emptyText}>
-                    Nenhuma venda registrada.
-                  </Text>
-                }
-                showsVerticalScrollIndicator={false}
-              />
-            )}
+          <View style={ReportStyle.reportContainer}>
             {activeReport === "inventory" && (
               <>
-                <View style={styles.searchContainer}>
+                <View style={ReportStyle.searchContainer}>
                   <Ionicons name="search" size={16} color="#888" />
                   <TextInput
-                    style={styles.searchInput}
+                    style={ReportStyle.searchInput}
                     placeholder="Buscar produto"
                     value={searchTerm}
                     onChangeText={handleSearch}
@@ -300,12 +251,15 @@ const ReportScreen = ({ navigation }) => {
                     </TouchableOpacity>
                   )}
                 </View>
-                <View style={styles.inventoryHeader}>
+                <View style={ReportStyle.inventoryHeader}>
                   <TouchableOpacity
-                    style={[styles.inventoryColumnHeader, styles.nameColumn]}
+                    style={[
+                      ReportStyle.inventoryColumnHeader,
+                      ReportStyle.nameColumn,
+                    ]}
                     onPress={() => toggleSort("nome")}
                   >
-                    <Text style={styles.headerText}>
+                    <Text style={ReportStyle.headerText}>
                       Nome{" "}
                       <Ionicons
                         name={
@@ -321,19 +275,26 @@ const ReportScreen = ({ navigation }) => {
                   </TouchableOpacity>
                   <TouchableOpacity
                     style={[
-                      styles.inventoryColumnHeader,
-                      styles.descriptionColumn,
+                      ReportStyle.inventoryColumnHeader,
+                      ReportStyle.descriptionColumn,
                     ]}
                   >
-                    <Text style={[styles.headerText, styles.centerText]}>
+                    <Text
+                      style={[ReportStyle.headerText, ReportStyle.centerText]}
+                    >
                       Descrição
                     </Text>
                   </TouchableOpacity>
                   <TouchableOpacity
-                    style={[styles.inventoryColumnHeader, styles.qtyColumn]}
+                    style={[
+                      ReportStyle.inventoryColumnHeader,
+                      ReportStyle.qtyColumn,
+                    ]}
                     onPress={() => toggleSort("quantidade")}
                   >
-                    <Text style={[styles.headerText, styles.centerText]}>
+                    <Text
+                      style={[ReportStyle.headerText, ReportStyle.centerText]}
+                    >
                       Qtd{" "}
                       <Ionicons
                         name={
@@ -355,7 +316,7 @@ const ReportScreen = ({ navigation }) => {
                   keyExtractor={(item, index) => `${item.nome}-${index}`}
                   renderItem={renderInventoryItem}
                   ListEmptyComponent={
-                    <Text style={styles.emptyText}>
+                    <Text style={ReportStyle.emptyText}>
                       Nenhum produto cadastrado no estoque.
                     </Text>
                   }
@@ -363,10 +324,44 @@ const ReportScreen = ({ navigation }) => {
                 />
               </>
             )}
-            {activeReport === "financial" && (
-              <View style={styles.centeredText}>
-                <Text>Relatório Financeiro ainda não implementado.</Text>
-              </View>
+            {activeReport === "sales" && (
+              <SectionList
+                sections={salesData}
+                keyExtractor={(item, index) => item.produto + index}
+                renderItem={({ item }) => (
+                  <View style={ReportStyle.saleItem}>
+                    <Text style={ReportStyle.saleProductName}>
+                      Produto:{" "}
+                      <Text style={ReportStyle.boldText}>{item.produto}</Text>
+                    </Text>
+                    <Text style={ReportStyle.saleDescription}>
+                      Descrição: {item.descricao}
+                    </Text>
+                    <Text style={ReportStyle.saleText}>
+                      Quantidade: {item.quantidade}
+                    </Text>
+                    <Text style={ReportStyle.saleText}>
+                      Valor Total: R$ {item.valor_total.toFixed(2)}
+                    </Text>
+                  </View>
+                )}
+                renderSectionHeader={({ section }) => (
+                  <View style={ReportStyle.sectionHeader}>
+                    <Text style={ReportStyle.sectionTitle}>
+                      {section.title}
+                    </Text>
+                    <Text style={ReportStyle.sectionTotal}>
+                      Total: R$ {section.total.toFixed(2)}
+                    </Text>
+                  </View>
+                )}
+                ListEmptyComponent={
+                  <Text style={ReportStyle.emptyText}>
+                    Nenhuma venda registrada.
+                  </Text>
+                }
+                showsVerticalScrollIndicator={false}
+              />
             )}
           </View>
         </>
@@ -374,176 +369,5 @@ const ReportScreen = ({ navigation }) => {
     </View>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    padding: 20,
-    backgroundColor: "#f9f9f9",
-  },
-  buttonContainer: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    marginBottom: 20,
-  },
-  button: {
-    flex: 1,
-    backgroundColor: "tomato",
-    paddingVertical: 5,
-    paddingHorizontal: 15,
-    borderRadius: 8,
-    alignItems: "center",
-    marginHorizontal: 5,
-    flexDirection: "row",
-    justifyContent: "center",
-  },
-  buttonText: {
-    color: "#fff",
-    fontWeight: "bold",
-    marginLeft: 5,
-  },
-  titleAndIcons: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 10,
-  },
-  iconContainer: {
-    flexDirection: "row",
-    gap: 15,
-  },
-  iconButton: {
-    flexDirection: "row",
-    alignItems: "center",
-  },
-  iconLabel: {
-    marginLeft: 5,
-    fontSize: 14,
-    color: "black",
-  },
-  reportTitle: {
-    textAlign: "center",
-    fontSize: 18,
-    fontWeight: "bold",
-  },
-  reportContainer: {
-    flex: 1,
-    borderWidth: 1,
-    borderColor: "#ddd",
-    borderRadius: 8,
-    padding: 10,
-    backgroundColor: "#fff",
-  },
-  searchContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    borderWidth: 1,
-    borderColor: "#ddd",
-    borderRadius: 8,
-    padding: 5,
-    marginBottom: 10,
-  },
-  searchInput: {
-    flex: 1,
-    marginLeft: 10,
-    fontSize: 14,
-  },
-  sectionHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    backgroundColor: "#f1f1f1",
-    paddingVertical: 10,
-    paddingHorizontal: 20,
-    marginVertical: 5,
-  },
-  sectionTitle: {
-    fontSize: 16,
-    fontWeight: "bold",
-  },
-  sectionTotal: {
-    fontSize: 14,
-    fontWeight: "bold",
-    color: "#333",
-  },
-  saleItem: {
-    padding: 10,
-    borderBottomWidth: 1,
-    borderBottomColor: "#ddd",
-  },
-  saleProductName: {
-    fontSize: 14,
-    color: "#333",
-  },
-  boldText: {
-    fontWeight: "bold",
-  },
-  saleDescription: {
-    fontSize: 14,
-    color: "#555",
-    marginVertical: 2,
-  },
-  saleText: {
-    fontSize: 14,
-    color: "#333",
-  },
-  inventoryHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingVertical: 10,
-    backgroundColor: "#ececec",
-    borderBottomWidth: 1,
-    borderBottomColor: "#ddd",
-  },
-  inventoryColumnHeader: {
-    fontWeight: "bold",
-    textAlign: "center",
-  },
-  inventoryRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingVertical: 10,
-    borderBottomWidth: 1,
-    borderBottomColor: "#ddd",
-  },
-  inventoryColumn: {
-    textAlign: "center",
-  },
-  nameColumn: {
-    width: "50%",
-    textAlign: "left",
-    paddingHorizontal: 5,
-  },
-  descriptionColumn: {
-    width: "30%",
-    textAlign: "center",
-    paddingHorizontal: 5,
-  },
-  qtyColumn: {
-    width: "20%",
-    textAlign: "center",
-  },
-  lowStock: {
-    color: "red",
-    fontWeight: "bold",
-  },
-  emptyText: {
-    textAlign: "center",
-    marginTop: 20,
-    color: "#888",
-  },
-  headerText: {
-    fontSize: 14,
-    fontWeight: "bold",
-  },
-  centeredText: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  centerText: {
-    textAlign: "center",
-  },
-});
 
 export default ReportScreen;

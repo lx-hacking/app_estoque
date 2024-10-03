@@ -1,0 +1,3 @@
+"Atualizações:
+Relatorios: Removido Exportar via PDF
+Vendas: Lista com produtos adicionada de acordo com BD. Produtos selecionaveis para adição a carrinho de compras. Modal para confirmação da adição de produtos e finalização de compras. Regra para nunca ultrapassar itens maximo no estoque. Regra para reserva de produto(sem remoção do BD) ate que a compra seja finalizada."
