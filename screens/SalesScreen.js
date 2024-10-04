@@ -205,6 +205,7 @@ const SalesScreen = ({ navigation }) => {
         item.quantidade === 0 && SalesScreenStyles.outOfStockItem,
       ]}
       onPress={() => handleProductPress(item)}
+      disabled={item.quantidade === 0} // Desabilita o toque se o produto estiver esgotado
     >
       <View style={SalesScreenStyles.column}>
         <Image
