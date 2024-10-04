@@ -65,11 +65,11 @@ const SalesScreenStyles = StyleSheet.create({
     backgroundColor: "rgba(0, 0, 0, 0.5)",
   },
   modalContent: {
-    width: "90%", // O modal agora ocupa 90% da largura da tela
+    width: "100%", // Garante que o modal ocupe a largura total da tela
     backgroundColor: "#fff",
     borderRadius: 10,
     padding: 20,
-    maxHeight: "80%", // Limite da altura
+    maxHeight: "80%",
     alignItems: "center",
   },
   closeButton: {
@@ -81,13 +81,13 @@ const SalesScreenStyles = StyleSheet.create({
     fontSize: 18,
     fontWeight: "bold",
     textAlign: "center",
-    marginBottom: 10, // Espaçamento abaixo do nome do produto
+    marginBottom: 10,
   },
   modalColumnsContainer: {
     flexDirection: "row",
     alignItems: "center",
     marginBottom: 10,
-    width: "100%", // Ocupa a largura total do modal
+    width: "100%",
   },
   leftColumn: {
     marginRight: 10,
@@ -99,6 +99,7 @@ const SalesScreenStyles = StyleSheet.create({
     width: 100,
     height: 100,
     borderRadius: 8,
+    alignItems: "left",
   },
   modalText: {
     fontSize: 16,
@@ -140,53 +141,54 @@ const SalesScreenStyles = StyleSheet.create({
     fontSize: 12,
   },
   cartItemContainer: {
-    marginBottom: 15, // Espaço entre os itens
+    marginBottom: 15,
     borderBottomWidth: 1,
     borderColor: "#ddd",
     paddingBottom: 10,
-    width: "100%", // Ocupa 100% da largura do modal
+    width: "100%", // Garante que o item use toda a largura do modal
   },
   cartItemName: {
     fontSize: 16,
     fontWeight: "bold",
     marginBottom: 5,
-    width: "100%", // Alinha o nome para ocupar a largura total do item
+    textAlign: "left",
   },
-  cartItemDetails: {
+  cartItemDetailsRow: {
     flexDirection: "row",
     alignItems: "center",
-    width: "100%", // Garante que os detalhes ocupem 100% da largura
+    justifyContent: "space-between",
+    marginBottom: 5,
+    width: "100%", // Garante que as colunas da segunda linha ocupem toda a largura
   },
   cartItemImage: {
-    width: 150,
-    height: 150,
-    marginRight: 10,
-  },
-  cartItemInfo: {
-    flex: 1,
+    width: 100,
+    height: 100,
+    marginRight: 10, // Espaçamento entre a imagem e o texto
   },
   cartItemVolume: {
     fontSize: 14,
     color: "#555",
+    textAlign: "center", // Centraliza o texto na coluna
+    flex: 1, // Faz com que o texto ocupe o espaço central
   },
   cartItemQuantityControl: {
     flexDirection: "row",
     alignItems: "center",
-    marginTop: 5,
+    justifyContent: "flex-end", // Alinha os controles de quantidade à direita
   },
   cartItemTotal: {
     fontSize: 16,
     fontWeight: "bold",
-    textAlign: "right", // Alinhado à direita
+    textAlign: "right",
     marginTop: 10,
-    width: "100%", // O total do item ocupa a largura total e fica alinhado à direita
+    width: "100%",
   },
   modalTotalText: {
     fontSize: 18,
     fontWeight: "bold",
-    textAlign: "right", // Alinhado à direita
+    textAlign: "right",
     marginTop: 20,
-    width: "100%", // O total geral ocupa a largura total e fica alinhado à direita
+    width: "100%",
   },
   cartButtonsContainer: {
     flexDirection: "row",

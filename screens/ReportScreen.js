@@ -84,6 +84,7 @@ const ReportScreen = ({ navigation }) => {
     }
   };
 
+  // Função para buscar o relatório de vendas
   const fetchSalesData = async () => {
     try {
       const response = await fetch("http://localhost:3000/salesReport");
@@ -91,10 +92,11 @@ const ReportScreen = ({ navigation }) => {
         throw new Error("Erro ao buscar relatório de vendas");
       }
       const data = await response.json();
+      // Formata os dados para que cada seção represente um dia de vendas
       const formattedData = Object.keys(data).map((date) => ({
-        title: date,
+        title: date, // A data da seção (DD/MM/AAAA)
         data: data[date].items,
-        total: data[date].total,
+        total: data[date].total, // Total do dia
       }));
       setSalesData(formattedData);
     } catch (error) {
@@ -190,6 +192,30 @@ const ReportScreen = ({ navigation }) => {
 
     await Sharing.shareAsync(uri);
   };
+
+  const renderSaleItem = ({ item }) => (
+    <View style={ReportStyle.saleItem}>
+      <Text style={ReportStyle.saleProductName}>
+        Produto: <Text style={ReportStyle.boldText}>{item.produto}</Text>
+      </Text>
+      <Text style={ReportStyle.saleText}>Quantidade: {item.quantidade}</Text>
+      <Text style={ReportStyle.saleText}>
+        Total por Produto: R${" "}
+        {(item.valor_unitario * item.quantidade).toFixed(2)}
+      </Text>
+    </View>
+  );
+
+  const renderSectionHeader = ({ section }) => (
+    <View style={ReportStyle.sectionHeader}>
+      <Text style={ReportStyle.sectionTitle}>
+        Data: {section.title} {/* Data no formato DD/MM/AAAA */}
+      </Text>
+      <Text style={ReportStyle.sectionTotal}>
+        Total do Dia: R$ {section.total.toFixed(2)} {/* Total do dia */}
+      </Text>
+    </View>
+  );
 
   return (
     <View style={ReportStyle.container}>
@@ -328,33 +354,8 @@ const ReportScreen = ({ navigation }) => {
               <SectionList
                 sections={salesData}
                 keyExtractor={(item, index) => item.produto + index}
-                renderItem={({ item }) => (
-                  <View style={ReportStyle.saleItem}>
-                    <Text style={ReportStyle.saleProductName}>
-                      Produto:{" "}
-                      <Text style={ReportStyle.boldText}>{item.produto}</Text>
-                    </Text>
-                    <Text style={ReportStyle.saleDescription}>
-                      Descrição: {item.descricao}
-                    </Text>
-                    <Text style={ReportStyle.saleText}>
-                      Quantidade: {item.quantidade}
-                    </Text>
-                    <Text style={ReportStyle.saleText}>
-                      Valor Total: R$ {item.valor_total.toFixed(2)}
-                    </Text>
-                  </View>
-                )}
-                renderSectionHeader={({ section }) => (
-                  <View style={ReportStyle.sectionHeader}>
-                    <Text style={ReportStyle.sectionTitle}>
-                      {section.title}
-                    </Text>
-                    <Text style={ReportStyle.sectionTotal}>
-                      Total: R$ {section.total.toFixed(2)}
-                    </Text>
-                  </View>
-                )}
+                renderItem={renderSaleItem} // Renderizando itens de vendas
+                renderSectionHeader={renderSectionHeader} // Renderizando o cabeçalho da seção
                 ListEmptyComponent={
                   <Text style={ReportStyle.emptyText}>
                     Nenhuma venda registrada.

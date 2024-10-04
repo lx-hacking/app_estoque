@@ -39,6 +39,32 @@ db.connect((err) => {
   console.log("Conectado ao banco de dados MySQL.");
 });
 
+const connectWebSocket = () => {
+  ws.current = new WebSocket("ws://localhost:3000");
+
+  ws.current.onopen = () => {
+    console.log("Conectado ao WebSocket para atualizações de estoque.");
+  };
+
+  ws.current.onmessage = (e) => {
+    const message = JSON.parse(e.data);
+    if (message.type === "UPDATE_STOCK") {
+      fetchInventoryData(); // Atualiza os dados de estoque automaticamente
+    }
+  };
+
+  ws.current.onclose = () => {
+    console.log(
+      "Conexão ao WebSocket fechada. Tentando reconectar em 5 segundos..."
+    );
+    setTimeout(connectWebSocket, 5000); // Aumenta o intervalo de reconexão para 5 segundos
+  };
+
+  ws.current.onerror = (e) => {
+    console.error("Erro no WebSocket:", e.message);
+  };
+};
+
 app.use(express.json({ limit: "10mb" })); // Aumenta o limite de tamanho da requisição para suportar base64
 app.use(cors());
 
@@ -86,6 +112,89 @@ app.post("/addproduct", (req, res) => {
     res.status(500).json({ error: `Erro inesperado: ${error.message}` });
   }
 });
+
+// Endpoint para buscar o relatório de vendas agrupado por data
+app.get("/salesReport", (req, res) => {
+  const sql = `
+    SELECT 
+      v.data_hora, 
+      p.nome AS produto, 
+      v.quantidade, 
+      v.valor_venda,
+      DATE_FORMAT(v.data_hora, '%d/%m/%Y') AS data_formatada
+    FROM vendas v
+    JOIN produtos p ON v.produto_id = p.id
+    ORDER BY v.data_hora DESC
+  `;
+
+  db.query(sql, (err, results) => {
+    if (err) {
+      console.error("Erro ao buscar relatório de vendas:", err);
+      return res
+        .status(500)
+        .json({ error: "Erro ao buscar relatório de vendas." });
+    }
+
+    // Agrupando os dados por data
+    const salesByDate = {};
+    results.forEach((row) => {
+      const date = row.data_formatada;
+      if (!salesByDate[date]) {
+        salesByDate[date] = { items: [], total: 0 };
+      }
+      salesByDate[date].items.push({
+        produto: row.produto,
+        quantidade: row.quantidade,
+        valor_total: row.quantidade * row.valor_venda,
+      });
+      salesByDate[date].total += row.quantidade * row.valor_venda;
+    });
+
+    res.status(200).json(salesByDate);
+  });
+});
+
+// Endpoint para buscar o relatório de vendas agrupado por data
+app.get("/salesReport", (req, res) => {
+  const sql = `
+    SELECT 
+      v.data_hora, 
+      p.nome AS produto, 
+      v.quantidade, 
+      v.valor_venda,
+      DATE_FORMAT(v.data_hora, '%d/%m/%Y') AS data_formatada
+    FROM vendas v
+    JOIN produtos p ON v.produto_id = p.id
+    ORDER BY v.data_hora DESC
+  `;
+
+  db.query(sql, (err, results) => {
+    if (err) {
+      console.error("Erro ao buscar relatório de vendas:", err);
+      return res
+        .status(500)
+        .json({ error: "Erro ao buscar relatório de vendas." });
+    }
+
+    // Agrupando os dados por data
+    const salesByDate = {};
+    results.forEach((row) => {
+      const date = row.data_formatada;
+      if (!salesByDate[date]) {
+        salesByDate[date] = { items: [], total: 0 };
+      }
+      salesByDate[date].items.push({
+        produto: row.produto,
+        quantidade: row.quantidade,
+        valor_total: row.quantidade * row.valor_venda,
+      });
+      salesByDate[date].total += row.quantidade * row.valor_venda;
+    });
+
+    res.status(200).json(salesByDate);
+  });
+});
+
 // Endpoint para buscar o relatório de estoque
 app.get("/inventoryReport", (req, res) => {
   const sql = `SELECT nome, descricao, quantidade FROM produtos ORDER BY nome ASC`;

@@ -8,6 +8,7 @@ import {
   Alert,
   TouchableOpacity,
   Modal,
+  ScrollView,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import SalesScreenStyles from "./SalesScreenStyles"; // Importa os estilos de um arquivo separado
@@ -301,54 +302,59 @@ const SalesScreen = ({ navigation }) => {
                 {selectedProduct.nome}
               </Text>
 
-              {/* Layout com duas colunas: foto à esquerda e informações à direita */}
-              <View style={SalesScreenStyles.modalColumnsContainer}>
-                {/* Coluna da esquerda com a foto */}
-                <View style={SalesScreenStyles.leftColumn}>
+              {/* Layout semelhante ao modal do carrinho */}
+              <View style={SalesScreenStyles.cartItemContainer}>
+                {/* Primeira linha: nome do produto em negrito */}
+                <Text style={SalesScreenStyles.cartItemName}>
+                  {selectedProduct.nome}
+                </Text>
+
+                {/* Segunda linha: 3 colunas */}
+                <View style={SalesScreenStyles.cartItemDetailsRow}>
+                  {/* Primeira coluna: imagem, alinhada à esquerda */}
                   <Image
                     source={{
                       uri: `data:image/jpeg;base64,${selectedProduct.imagem}`,
                     }}
-                    style={SalesScreenStyles.productImageModal}
+                    style={SalesScreenStyles.cartItemImage}
                   />
-                </View>
 
-                {/* Coluna da direita com as informações */}
-                <View style={SalesScreenStyles.rightColumn}>
-                  <Text style={SalesScreenStyles.modalText}>
+                  {/* Segunda coluna: Volume, centralizado */}
+                  <Text style={SalesScreenStyles.cartItemVolume}>
                     Volume: {selectedProduct.descricao}
                   </Text>
-                  <Text style={SalesScreenStyles.modalText}>
-                    Preço: R${" "}
-                    {parseFloat(selectedProduct.valor_venda).toFixed(2)}
-                  </Text>
-                  <Text style={SalesScreenStyles.modalText}>
-                    Estoque: {selectedProduct.quantidade}
-                  </Text>
-                </View>
-              </View>
 
-              {/* Controles de quantidade */}
-              <View style={SalesScreenStyles.quantityContainer}>
-                <TouchableOpacity
-                  onPress={decreaseQuantity}
-                  style={[
-                    SalesScreenStyles.quantityButton,
-                    SalesScreenStyles.decreaseButton,
-                  ]}
-                >
-                  <Ionicons name="remove" size={16} color="white" />
-                </TouchableOpacity>
-                <Text style={SalesScreenStyles.quantityText}>{quantity}</Text>
-                <TouchableOpacity
-                  onPress={increaseQuantity}
-                  style={[
-                    SalesScreenStyles.quantityButton,
-                    SalesScreenStyles.increaseButton,
-                  ]}
-                >
-                  <Ionicons name="add" size={16} color="white" />
-                </TouchableOpacity>
+                  {/* Terceira coluna: controles de quantidade, alinhados à direita */}
+                  <View style={SalesScreenStyles.cartItemQuantityControl}>
+                    <TouchableOpacity
+                      onPress={decreaseQuantity}
+                      style={[
+                        SalesScreenStyles.quantityButton,
+                        SalesScreenStyles.decreaseButton,
+                      ]}
+                    >
+                      <Ionicons name="remove" size={16} color="white" />
+                    </TouchableOpacity>
+                    <Text style={SalesScreenStyles.quantityText}>
+                      {quantity}
+                    </Text>
+                    <TouchableOpacity
+                      onPress={increaseQuantity}
+                      style={[
+                        SalesScreenStyles.quantityButton,
+                        SalesScreenStyles.increaseButton,
+                      ]}
+                    >
+                      <Ionicons name="add" size={16} color="white" />
+                    </TouchableOpacity>
+                  </View>
+                </View>
+
+                {/* Terceira linha: total do produto alinhado à direita */}
+                <Text style={SalesScreenStyles.cartItemTotal}>
+                  Total: R${" "}
+                  {(quantity * selectedProduct.valor_venda).toFixed(2)}
+                </Text>
               </View>
 
               <TouchableOpacity
@@ -385,29 +391,37 @@ const SalesScreen = ({ navigation }) => {
               Carrinho de Compras
             </Text>
 
-            {/* Lista de itens do carrinho */}
-            <FlatList
-              data={cartItems}
-              keyExtractor={(item) => item.id.toString()}
-              renderItem={({ item }) => (
-                <View style={SalesScreenStyles.cartItemContainer}>
-                  {/* Nome do produto */}
-                  <Text style={SalesScreenStyles.cartItemName}>
-                    {item.nome}
-                  </Text>
+            {/* ScrollView para rolar o conteúdo sem mostrar a barra de rolagem */}
+            <ScrollView
+              style={{ width: "100%" }}
+              showsVerticalScrollIndicator={false} // Oculta a barra de rolagem
+            >
+              <FlatList
+                data={cartItems}
+                keyExtractor={(item) => item.id.toString()}
+                renderItem={({ item }) => (
+                  <View style={SalesScreenStyles.cartItemContainer}>
+                    {/* Primeira linha: nome do produto em negrito */}
+                    <Text style={SalesScreenStyles.cartItemName}>
+                      {item.nome}
+                    </Text>
 
-                  {/* Linha com a foto, volume e controle de quantidade */}
-                  <View style={SalesScreenStyles.cartItemDetails}>
-                    <Image
-                      source={{
-                        uri: `data:image/jpeg;base64,${item.imagem}`,
-                      }}
-                      style={SalesScreenStyles.cartItemImage}
-                    />
-                    <View style={SalesScreenStyles.cartItemInfo}>
+                    {/* Segunda linha: 3 colunas */}
+                    <View style={SalesScreenStyles.cartItemDetailsRow}>
+                      {/* Primeira coluna: imagem, alinhada à esquerda */}
+                      <Image
+                        source={{
+                          uri: `data:image/jpeg;base64,${item.imagem}`,
+                        }}
+                        style={SalesScreenStyles.cartItemImage}
+                      />
+
+                      {/* Segunda coluna: Volume, centralizado */}
                       <Text style={SalesScreenStyles.cartItemVolume}>
                         Frasco: {item.descricao}
                       </Text>
+
+                      {/* Terceira coluna: controles de quantidade, alinhados à direita */}
                       <View style={SalesScreenStyles.cartItemQuantityControl}>
                         <TouchableOpacity
                           onPress={() => {
@@ -462,15 +476,15 @@ const SalesScreen = ({ navigation }) => {
                         </TouchableOpacity>
                       </View>
                     </View>
-                  </View>
 
-                  {/* Total por produto */}
-                  <Text style={SalesScreenStyles.cartItemTotal}>
-                    Total: R$ {(item.quantity * item.valor_venda).toFixed(2)}
-                  </Text>
-                </View>
-              )}
-            />
+                    {/* Terceira linha: total do produto alinhado à direita */}
+                    <Text style={SalesScreenStyles.cartItemTotal}>
+                      Total: R$ {(item.quantity * item.valor_venda).toFixed(2)}
+                    </Text>
+                  </View>
+                )}
+              />
+            </ScrollView>
 
             {/* Total geral */}
             <Text style={SalesScreenStyles.modalTotalText}>
@@ -488,7 +502,7 @@ const SalesScreen = ({ navigation }) => {
                 </Text>
               </TouchableOpacity>
               <TouchableOpacity
-                onPress={finalizarCompra} // Função para finalizar a compra
+                onPress={finalizarCompra}
                 style={SalesScreenStyles.finalizeButton}
               >
                 <Text style={SalesScreenStyles.finalizeButtonText}>
