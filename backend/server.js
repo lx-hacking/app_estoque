@@ -14,10 +14,10 @@ const server = http.createServer(app);
 const wss = new WebSocket.Server({ server });
 
 // Função para enviar mensagem via WebSocket para todos os clientes
-const broadcastStockUpdate = () => {
+const broadcastUpdate = (type) => {
   wss.clients.forEach((client) => {
     if (client.readyState === WebSocket.OPEN) {
-      client.send(JSON.stringify({ type: "UPDATE_STOCK" }));
+      client.send(JSON.stringify({ type }));
     }
   });
 };
@@ -38,32 +38,6 @@ db.connect((err) => {
   }
   console.log("Conectado ao banco de dados MySQL.");
 });
-
-const connectWebSocket = () => {
-  ws.current = new WebSocket("ws://localhost:3000");
-
-  ws.current.onopen = () => {
-    console.log("Conectado ao WebSocket para atualizações de estoque.");
-  };
-
-  ws.current.onmessage = (e) => {
-    const message = JSON.parse(e.data);
-    if (message.type === "UPDATE_STOCK") {
-      fetchInventoryData(); // Atualiza os dados de estoque automaticamente
-    }
-  };
-
-  ws.current.onclose = () => {
-    console.log(
-      "Conexão ao WebSocket fechada. Tentando reconectar em 5 segundos..."
-    );
-    setTimeout(connectWebSocket, 5000); // Aumenta o intervalo de reconexão para 5 segundos
-  };
-
-  ws.current.onerror = (e) => {
-    console.error("Erro no WebSocket:", e.message);
-  };
-};
 
 app.use(express.json({ limit: "10mb" })); // Aumenta o limite de tamanho da requisição para suportar base64
 app.use(cors());
@@ -103,8 +77,8 @@ app.post("/addproduct", (req, res) => {
         }
         res.status(201).json({ message: "Produto salvo com sucesso!" });
 
-        // Notifica todos os clientes via WebSocket
-        broadcastStockUpdate();
+        // Notifica todos os clientes via WebSocket sobre a atualização de estoque
+        broadcastUpdate("UPDATE_STOCK");
       }
     );
   } catch (error) {
@@ -113,18 +87,18 @@ app.post("/addproduct", (req, res) => {
   }
 });
 
-// Endpoint para buscar o relatório de vendas agrupado por data
+// Endpoint para buscar o relatório de vendas agrupado por data e produtos
 app.get("/salesReport", (req, res) => {
   const sql = `
     SELECT 
-      v.data_hora, 
       p.nome AS produto, 
-      v.quantidade, 
-      v.valor_venda,
+      SUM(v.quantidade) AS quantidade, 
+      SUM(v.valor_venda * v.quantidade) AS valor_total, 
       DATE_FORMAT(v.data_hora, '%d/%m/%Y') AS data_formatada
     FROM vendas v
     JOIN produtos p ON v.produto_id = p.id
-    ORDER BY v.data_hora DESC
+    GROUP BY data_formatada, p.nome
+    ORDER BY data_formatada DESC, p.nome ASC
   `;
 
   db.query(sql, (err, results) => {
@@ -145,50 +119,9 @@ app.get("/salesReport", (req, res) => {
       salesByDate[date].items.push({
         produto: row.produto,
         quantidade: row.quantidade,
-        valor_total: row.quantidade * row.valor_venda,
+        valor_total: row.valor_total,
       });
-      salesByDate[date].total += row.quantidade * row.valor_venda;
-    });
-
-    res.status(200).json(salesByDate);
-  });
-});
-
-// Endpoint para buscar o relatório de vendas agrupado por data
-app.get("/salesReport", (req, res) => {
-  const sql = `
-    SELECT 
-      v.data_hora, 
-      p.nome AS produto, 
-      v.quantidade, 
-      v.valor_venda,
-      DATE_FORMAT(v.data_hora, '%d/%m/%Y') AS data_formatada
-    FROM vendas v
-    JOIN produtos p ON v.produto_id = p.id
-    ORDER BY v.data_hora DESC
-  `;
-
-  db.query(sql, (err, results) => {
-    if (err) {
-      console.error("Erro ao buscar relatório de vendas:", err);
-      return res
-        .status(500)
-        .json({ error: "Erro ao buscar relatório de vendas." });
-    }
-
-    // Agrupando os dados por data
-    const salesByDate = {};
-    results.forEach((row) => {
-      const date = row.data_formatada;
-      if (!salesByDate[date]) {
-        salesByDate[date] = { items: [], total: 0 };
-      }
-      salesByDate[date].items.push({
-        produto: row.produto,
-        quantidade: row.quantidade,
-        valor_total: row.quantidade * row.valor_venda,
-      });
-      salesByDate[date].total += row.quantidade * row.valor_venda;
+      salesByDate[date].total += row.valor_total;
     });
 
     res.status(200).json(salesByDate);
@@ -211,6 +144,7 @@ app.get("/inventoryReport", (req, res) => {
     res.status(200).json(results);
   });
 });
+
 // Endpoint para buscar todos os produtos
 app.get("/products", (req, res) => {
   const sql = `SELECT id, nome, descricao, valor_venda, quantidade, preco_custo, imagem FROM produtos`;
@@ -282,7 +216,7 @@ app.post("/updateproducts", (req, res) => {
       res.json({ message: "Produtos atualizados com sucesso!" });
 
       // Notifica todos os clientes via WebSocket
-      broadcastStockUpdate();
+      broadcastUpdate("UPDATE_STOCK");
     })
     .catch((error) =>
       res.status(500).json({ error: `Erro ao atualizar produtos: ${error}` })
@@ -302,7 +236,7 @@ app.delete("/deleteproduct/:id", (req, res) => {
     res.status(200).json({ message: "Produto deletado com sucesso!" });
 
     // Notifica todos os clientes via WebSocket
-    broadcastStockUpdate();
+    broadcastUpdate("UPDATE_STOCK");
   });
 });
 
@@ -362,8 +296,8 @@ app.post("/finalizarVenda", (req, res) => {
         message: "Venda finalizada e estoque atualizado com sucesso.",
       });
 
-      // Notifica todos os clientes via WebSocket
-      broadcastStockUpdate();
+      // Notifica todos os clientes via WebSocket sobre a venda
+      broadcastUpdate("UPDATE_SALES");
     })
     .catch((error) => {
       res.status(500).json({

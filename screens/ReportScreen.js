@@ -18,30 +18,40 @@ import { useFocusEffect } from "@react-navigation/native"; // Para detectar quan
 const ReportScreen = ({ navigation }) => {
   const [activeReport, setActiveReport] = useState(null);
   const [salesData, setSalesData] = useState([]);
+  const [expandedSections, setExpandedSections] = useState({}); // Estado para controlar se as seções estão expandidas ou minimizadas
   const [inventoryData, setInventoryData] = useState([]);
   const [filteredInventoryData, setFilteredInventoryData] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [sortConfig, setSortConfig] = useState({ key: null, direction: "asc" });
   const ws = useRef(null); // Usando WebSocket
 
-  // Função para conectar ao WebSocket e ouvir atualizações de estoque
+  // Função para conectar ao WebSocket e ouvir atualizações de estoque e vendas
   const connectWebSocket = () => {
     ws.current = new WebSocket("ws://localhost:3000");
 
     ws.current.onopen = () => {
-      console.log("Conectado ao WebSocket para atualizações de estoque.");
+      console.log(
+        "Conectado ao WebSocket para atualizações de estoque e vendas."
+      );
     };
 
     ws.current.onmessage = (e) => {
       const message = JSON.parse(e.data);
+
+      // Atualizar a lista de estoque quando houver atualizações
       if (message.type === "UPDATE_STOCK") {
         fetchInventoryData(); // Atualiza os dados de estoque automaticamente
+      }
+
+      // Atualizar a lista de vendas quando houver uma nova venda
+      if (message.type === "UPDATE_SALES") {
+        fetchSalesData(); // Atualiza os dados de vendas automaticamente
       }
     };
 
     ws.current.onclose = () => {
       console.log("Conexão ao WebSocket fechada. Tentando reconectar...");
-      setTimeout(connectWebSocket, 5000);
+      setTimeout(connectWebSocket, 5000); // Tentar reconectar em 5 segundos
     };
 
     ws.current.onerror = (e) => {
@@ -102,6 +112,14 @@ const ReportScreen = ({ navigation }) => {
     } catch (error) {
       console.error("Erro ao buscar relatório de vendas:", error);
     }
+  };
+
+  // Função para alternar entre expandir e minimizar as seções
+  const toggleSection = (date) => {
+    setExpandedSections((prev) => ({
+      ...prev,
+      [date]: !prev[date], // Alterna o estado expandido/minimizado
+    }));
   };
 
   // Função para ordenar os dados de estoque
@@ -193,6 +211,7 @@ const ReportScreen = ({ navigation }) => {
     await Sharing.shareAsync(uri);
   };
 
+  // Renderiza um item de venda
   const renderSaleItem = ({ item }) => (
     <View style={ReportStyle.saleItem}>
       <Text style={ReportStyle.saleProductName}>
@@ -200,20 +219,29 @@ const ReportScreen = ({ navigation }) => {
       </Text>
       <Text style={ReportStyle.saleText}>Quantidade: {item.quantidade}</Text>
       <Text style={ReportStyle.saleText}>
-        Total por Produto: R${" "}
-        {(item.valor_unitario * item.quantidade).toFixed(2)}
+        Total por Produto: R$ {item.valor_total.toFixed(2)}
       </Text>
     </View>
   );
 
+  // Renderiza o cabeçalho de uma seção, com a data e o total de vendas do dia
   const renderSectionHeader = ({ section }) => (
     <View style={ReportStyle.sectionHeader}>
-      <Text style={ReportStyle.sectionTitle}>
-        Data: {section.title} {/* Data no formato DD/MM/AAAA */}
-      </Text>
+      <TouchableOpacity onPress={() => toggleSection(section.title)}>
+        <Text style={ReportStyle.sectionTitle}>
+          Data: {section.title} {/* Data no formato DD/MM/AAAA */}
+        </Text>
+      </TouchableOpacity>
       <Text style={ReportStyle.sectionTotal}>
         Total do Dia: R$ {section.total.toFixed(2)} {/* Total do dia */}
       </Text>
+      <TouchableOpacity onPress={() => toggleSection(section.title)}>
+        <Ionicons
+          name={expandedSections[section.title] ? "chevron-up" : "chevron-down"}
+          size={24}
+          color="#333"
+        />
+      </TouchableOpacity>
     </View>
   );
 
@@ -222,7 +250,10 @@ const ReportScreen = ({ navigation }) => {
       <View style={ReportStyle.buttonContainer}>
         <TouchableOpacity
           style={ReportStyle.button}
-          onPress={() => setActiveReport("sales")}
+          onPress={() => {
+            setActiveReport("sales");
+            fetchSalesData(); // Chamar a função para buscar os dados
+          }}
         >
           <Ionicons name="stats-chart" size={24} color="#fff" />
           <Text style={ReportStyle.buttonText}>Vendas</Text>
@@ -354,7 +385,11 @@ const ReportScreen = ({ navigation }) => {
               <SectionList
                 sections={salesData}
                 keyExtractor={(item, index) => item.produto + index}
-                renderItem={renderSaleItem} // Renderizando itens de vendas
+                renderItem={({ item, section }) =>
+                  expandedSections[section.title]
+                    ? renderSaleItem({ item })
+                    : null
+                } // Renderiza os itens apenas se a seção estiver expandida
                 renderSectionHeader={renderSectionHeader} // Renderizando o cabeçalho da seção
                 ListEmptyComponent={
                   <Text style={ReportStyle.emptyText}>
