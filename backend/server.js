@@ -60,6 +60,8 @@ app.post("/cadastrarFuncionario", (req, res) => {
       data_contratacao,
       email,
       image,
+      telefone, // Adiciona o campo telefone
+      pix, // Adiciona o campo pix
     } = req.body;
 
     if (!isValidDate(data_nascimento) || !isValidDate(data_contratacao)) {
@@ -77,8 +79,8 @@ app.post("/cadastrarFuncionario", (req, res) => {
     const imagemBuffer = Buffer.from(image, "base64");
 
     const sql = `
-      INSERT INTO funcionarios (nome_completo, data_nascimento, cpf, cargo, salario, data_contratacao, email, foto)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+      INSERT INTO funcionarios (nome_completo, data_nascimento, cpf, cargo, salario, data_contratacao, email, foto, telefone, pix)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `;
 
     db.query(
@@ -92,6 +94,8 @@ app.post("/cadastrarFuncionario", (req, res) => {
         data_contratacao,
         email,
         imagemBuffer,
+        telefone, // Inclui o telefone na query
+        pix, // Inclui o pix na query
       ],
       (err, result) => {
         if (err) {

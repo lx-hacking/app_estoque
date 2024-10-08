@@ -35,8 +35,8 @@ export const funcionariosStyles = StyleSheet.create({
   },
   card: {
     backgroundColor: "#fff",
-    padding: 15,
-    marginBottom: 10,
+    padding: 25,
+    marginBottom: 25,
     borderRadius: 10,
     flexDirection: "row",
     shadowColor: "#000",
@@ -51,6 +51,7 @@ export const funcionariosStyles = StyleSheet.create({
   row: {
     flexDirection: "row",
     width: "100%",
+    alignItems: "center", // Centraliza os itens verticalmente
   },
   imageColumn: {
     width: "35%",
@@ -58,14 +59,19 @@ export const funcionariosStyles = StyleSheet.create({
     alignItems: "center",
   },
   detailsColumn: {
-    width: "65%",
-    justifyContent: "center",
-    paddingLeft: 15, // Espaçamento entre a foto e as informações
+    width: "50%", // Reduz a largura para acomodar a barra
+    justifyContent: "space-between", // Distribui os itens igualmente na coluna
+    paddingLeft: 15, // Espaçamento entre a barra e as informações
   },
   thumbnail: {
     width: 100,
     height: 100,
     borderRadius: 10,
+  },
+  verticalBar: {
+    width: 10,
+    height: 100,
+    backgroundColor: "tomato",
   },
   label: {
     fontSize: 16,
@@ -76,6 +82,9 @@ export const funcionariosStyles = StyleSheet.create({
   value: {
     fontSize: 16,
     color: "#666",
-    marginBottom: 10,
+  },
+  detailRow: {
+    flex: 1,
+    justifyContent: "center",
   },
 });

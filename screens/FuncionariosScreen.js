@@ -90,42 +90,54 @@ export default function FuncionariosScreen({ navigation }) {
   const renderFuncionario = ({ item }) => {
     return (
       <TouchableOpacity
-        style={funcionariosStyles.card} // Estilo do container de cada funcionário
+        style={funcionariosStyles.card}
         onPress={() =>
           navigation.navigate("DetalhesFuncionario", { funcionario: item })
-        } // Navegar para os detalhes do funcionário
+        }
       >
         <View style={funcionariosStyles.row}>
           {/* Coluna 1: Foto (35% da largura) */}
           <View style={funcionariosStyles.imageColumn}>
             <Image
-              source={{ uri: `data:image/jpeg;base64,${item.foto}` }} // Renderiza a imagem a partir do Base64
-              style={funcionariosStyles.thumbnail} // Estilo da miniatura (100x100)
+              source={{ uri: `data:image/jpeg;base64,${item.foto}` }}
+              style={funcionariosStyles.thumbnail}
             />
           </View>
-          {/* Coluna 2: Informações (65% da largura) */}
+
+          {/* Barra Vertical */}
+          <View style={funcionariosStyles.verticalBar}></View>
+
+          {/* Coluna 2: Informações (50% da largura) */}
           <View style={funcionariosStyles.detailsColumn}>
-            <Text style={funcionariosStyles.label}>
-              Nome:{" "}
-              <Text style={funcionariosStyles.value}>
-                {capitalizeFirstLetter(item.nome_completo)}
+            <View style={funcionariosStyles.detailRow}>
+              <Text style={funcionariosStyles.label}>
+                Nome:{" "}
+                <Text style={funcionariosStyles.value}>
+                  {capitalizeFirstLetter(item.nome_completo)}
+                </Text>
               </Text>
-            </Text>
-            <Text style={funcionariosStyles.label}>
-              Cargo:{" "}
-              <Text style={funcionariosStyles.value}>
-                {capitalizeFirstLetter(item.cargo)}
+            </View>
+            <View style={funcionariosStyles.detailRow}>
+              <Text style={funcionariosStyles.label}>
+                Cargo:{" "}
+                <Text style={funcionariosStyles.value}>
+                  {capitalizeFirstLetter(item.cargo)}
+                </Text>
               </Text>
-            </Text>
-            <Text style={funcionariosStyles.label}>
-              Salário:{" "}
-              <Text style={funcionariosStyles.value}>
-                R$ {parseFloat(item.salario).toFixed(2)}
+            </View>
+            <View style={funcionariosStyles.detailRow}>
+              <Text style={funcionariosStyles.label}>
+                Salário:{" "}
+                <Text style={funcionariosStyles.value}>
+                  R$ {parseFloat(item.salario).toFixed(2)}
+                </Text>
               </Text>
-            </Text>
-            <Text style={funcionariosStyles.label}>
-              CPF: <Text style={funcionariosStyles.value}>{item.cpf}</Text>
-            </Text>
+            </View>
+            <View style={funcionariosStyles.detailRow}>
+              <Text style={funcionariosStyles.label}>
+                CPF: <Text style={funcionariosStyles.value}>{item.cpf}</Text>
+              </Text>
+            </View>
           </View>
         </View>
       </TouchableOpacity>

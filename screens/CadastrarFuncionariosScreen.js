@@ -21,6 +21,8 @@ export default function CadastrarFuncionariosScreen({ navigation }) {
   const [email, setEmail] = useState("");
   const [cargo, setCargo] = useState("Vendedor");
   const [salario, setSalario] = useState("");
+  const [telefone, setTelefone] = useState("");
+  const [pix, setPix] = useState("");
   const [dataContratacao, setDataContratacao] = useState("");
   const [modalVisible, setModalVisible] = useState(false); // Estado do Modal
   const [dataNascimentoError, setDataNascimentoError] = useState(""); // Erro da data de nascimento
@@ -51,6 +53,14 @@ export default function CadastrarFuncionariosScreen({ navigation }) {
       .replace(/(\d{3})(\d)/, "$1.$2")
       .replace(/(\d{3})(\d{1,2})$/, "$1-$2");
     setCpf(cpfFormatted);
+  };
+
+  const handleTelefoneChange = (text) => {
+    let telefoneFormatted = text
+      .replace(/\D/g, "")
+      .replace(/(\d{2})(\d)/, "($1) $2")
+      .replace(/(\d{5})(\d{4})$/, "$1-$2");
+    setTelefone(telefoneFormatted);
   };
 
   const handleDateChange = (text, setDate, setError) => {
@@ -102,6 +112,8 @@ export default function CadastrarFuncionariosScreen({ navigation }) {
       !email ||
       !cargo ||
       !salario ||
+      !telefone ||
+      !pix ||
       !dataContratacao ||
       !image
     ) {
@@ -121,6 +133,8 @@ export default function CadastrarFuncionariosScreen({ navigation }) {
       email,
       cargo,
       salario,
+      telefone,
+      pix,
       data_contratacao: formatDate(dataContratacao), // Formata a data de contratação
       image: image ? image.split(",")[1] : null, // Remove o prefixo base64
     };
@@ -269,6 +283,26 @@ export default function CadastrarFuncionariosScreen({ navigation }) {
           value={email}
           onChangeText={setEmail}
           keyboardType="email-address"
+          style={cadastrarFuncionariosStyles.input}
+        />
+
+        {/* Campo de Telefone */}
+        <Text style={cadastrarFuncionariosStyles.label}>Telefone</Text>
+        <TextInput
+          placeholder="(xx) xxxxx-xxxx"
+          value={telefone}
+          onChangeText={handleTelefoneChange}
+          keyboardType="phone-pad"
+          style={cadastrarFuncionariosStyles.input}
+          maxLength={15}
+        />
+
+        {/* Campo de PIX */}
+        <Text style={cadastrarFuncionariosStyles.label}>PIX</Text>
+        <TextInput
+          placeholder="Chave PIX"
+          value={pix}
+          onChangeText={setPix}
           style={cadastrarFuncionariosStyles.input}
         />
 
