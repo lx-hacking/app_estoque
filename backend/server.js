@@ -1,7 +1,7 @@
 const express = require("express");
 const mysql = require("mysql");
 const cors = require("cors");
-const http = require("http"); // Para utilizar WebSocket com o servidor HTTP
+const http = require("http");
 const WebSocket = require("ws");
 
 const app = express();
@@ -39,8 +39,80 @@ db.connect((err) => {
   console.log("Conectado ao banco de dados MySQL.");
 });
 
-app.use(express.json({ limit: "10mb" })); // Aumenta o limite de tamanho da requisição para suportar base64
+app.use(express.json({ limit: "10mb" }));
 app.use(cors());
+
+// Função auxiliar para validar formato de data (YYYY-MM-DD)
+const isValidDate = (dateString) => {
+  const regex = /^\d{4}-\d{2}-\d{2}$/;
+  return regex.test(dateString);
+};
+
+// Endpoint para cadastrar funcionários
+app.post("/cadastrarFuncionario", (req, res) => {
+  try {
+    const {
+      nome_completo,
+      data_nascimento,
+      cpf,
+      cargo,
+      salario,
+      data_contratacao,
+      email,
+      image,
+    } = req.body;
+
+    if (!isValidDate(data_nascimento) || !isValidDate(data_contratacao)) {
+      return res
+        .status(400)
+        .json({ error: "Formato de data inválido. Use o formato YYYY-MM-DD." });
+    }
+
+    if (!image) {
+      console.error("Erro: Foto não foi recebida.");
+      return res.status(400).json({ error: "Erro: Foto não foi recebida." });
+    }
+
+    // Decodifica a imagem de base64 para binário
+    const imagemBuffer = Buffer.from(image, "base64");
+
+    const sql = `
+      INSERT INTO funcionarios (nome_completo, data_nascimento, cpf, cargo, salario, data_contratacao, email, foto)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+    `;
+
+    db.query(
+      sql,
+      [
+        nome_completo,
+        data_nascimento,
+        cpf,
+        cargo,
+        parseFloat(salario),
+        data_contratacao,
+        email,
+        imagemBuffer,
+      ],
+      (err, result) => {
+        if (err) {
+          console.error("Erro ao cadastrar funcionário:", err);
+          return res
+            .status(500)
+            .json({ error: `Erro ao cadastrar funcionário: ${err.message}` });
+        }
+        res
+          .status(201)
+          .json({ message: "Funcionário cadastrado com sucesso!" });
+
+        // Notifica todos os clientes via WebSocket sobre a atualização
+        broadcastUpdate("UPDATE_FUNCIONARIO");
+      }
+    );
+  } catch (error) {
+    console.error("Erro inesperado ao processar a requisição:", error);
+    res.status(500).json({ error: `Erro inesperado: ${error.message}` });
+  }
+});
 
 // Endpoint para salvar o produto no banco de dados
 app.post("/addproduct", (req, res) => {
@@ -166,6 +238,26 @@ app.get("/products", (req, res) => {
   });
 });
 
+// Endpoint para buscar todos os funcionários cadastrados
+app.get("/getFuncionarios", (req, res) => {
+  const sql = `SELECT id, nome_completo, cargo, salario, cpf, foto FROM funcionarios`;
+
+  db.query(sql, (err, results) => {
+    if (err) {
+      console.error("Erro ao buscar funcionários:", err);
+      return res.status(500).json({ error: "Erro ao buscar funcionários." });
+    }
+
+    // Converte a imagem de BLOB para base64
+    const funcionarios = results.map((funcionario) => ({
+      ...funcionario,
+      foto: funcionario.foto ? funcionario.foto.toString("base64") : null,
+    }));
+
+    res.status(200).json(funcionarios);
+  });
+});
+
 // Endpoint para atualizar múltiplos produtos
 app.post("/updateproducts", (req, res) => {
   const { products } = req.body;
@@ -240,7 +332,7 @@ app.delete("/deleteproduct/:id", (req, res) => {
   });
 });
 
-// Novo endpoint para finalizar a compra e salvar a venda
+// Endpoint para finalizar a compra e salvar a venda
 app.post("/finalizarVenda", (req, res) => {
   const { items } = req.body;
 
