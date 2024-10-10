@@ -13,22 +13,31 @@ import * as ImagePicker from "expo-image-picker";
 import { cadastrarFuncionariosStyles } from "./CadastrarFuncionariosStyle"; // Estilo específico para cadastro
 import { Picker } from "@react-native-picker/picker"; // Dropdown (picker) para o cargo
 
-export default function CadastrarFuncionariosScreen({ navigation }) {
-  const [image, setImage] = useState(null);
-  const [nomeCompleto, setNomeCompleto] = useState("");
-  const [dataNascimento, setDataNascimento] = useState("");
-  const [cpf, setCpf] = useState("");
-  const [email, setEmail] = useState("");
-  const [cargo, setCargo] = useState("Vendedor");
-  const [salario, setSalario] = useState("");
-  const [telefone, setTelefone] = useState("");
-  const [pix, setPix] = useState("");
-  const [dataContratacao, setDataContratacao] = useState("");
-  const [modalVisible, setModalVisible] = useState(false);
+export default function EditarFuncionarioScreen({ route, navigation }) {
+  const { funcionario } = route.params; // Dados do funcionário a ser editado
+
+  const [image, setImage] = useState(
+    funcionario.foto ? `data:image/jpeg;base64,${funcionario.foto}` : null
+  );
+  const [nomeCompleto, setNomeCompleto] = useState(
+    funcionario.nome_completo || ""
+  );
+  const [dataNascimento, setDataNascimento] = useState(
+    funcionario.data_nascimento || ""
+  );
+  const [cpf, setCpf] = useState(funcionario.cpf || "");
+  const [email, setEmail] = useState(funcionario.email || "");
+  const [cargo, setCargo] = useState(funcionario.cargo || "Vendedor");
+  const [salario, setSalario] = useState(funcionario.salario || "");
+  const [telefone, setTelefone] = useState(funcionario.telefone || "");
+  const [pix, setPix] = useState(funcionario.pix || "");
+  const [dataContratacao, setDataContratacao] = useState(
+    funcionario.data_contratacao || ""
+  );
+  const [modalVisible, setModalVisible] = useState(false); // Estado do Modal
   const [dataNascimentoError, setDataNascimentoError] = useState("");
   const [dataContratacaoError, setDataContratacaoError] = useState("");
-
-  const [campoErro, setCampoErro] = useState({}); // Estado para controlar os erros de campo vazio
+  const [campoErro, setCampoErro] = useState({}); // Estado para controle dos erros de campo vazio
 
   const pickImage = async () => {
     let permissionResult =
@@ -44,7 +53,7 @@ export default function CadastrarFuncionariosScreen({ navigation }) {
       quality: 1,
     });
     if (!result.canceled) {
-      setImage(result.assets[0].uri); // Ajuste para garantir que o URI correto seja capturado
+      setImage(result.assets[0].uri);
     }
   };
 
@@ -73,12 +82,10 @@ export default function CadastrarFuncionariosScreen({ navigation }) {
       .replace(/(\d{4})\d+?$/, "$1");
     setDate(dateFormatted);
 
-    // Validação da data
     const [day, month, year] = dateFormatted.split("/").map(Number);
     const currentYear = new Date().getFullYear();
 
     let errorMessage = "";
-
     if (month > 12 || month < 1) {
       errorMessage = "Mês inválido.";
     } else if (day > 31 || day < 1) {
@@ -136,6 +143,7 @@ export default function CadastrarFuncionariosScreen({ navigation }) {
     }
 
     const formData = {
+      id: funcionario.id,
       nome_completo: nomeCompleto,
       data_nascimento: formatDate(dataNascimento),
       cpf,
@@ -150,9 +158,9 @@ export default function CadastrarFuncionariosScreen({ navigation }) {
 
     try {
       const response = await fetch(
-        "http://localhost:3000/cadastrarFuncionario",
+        `http://localhost:3000/editarFuncionario/${funcionario.id}`,
         {
-          method: "POST",
+          method: "PUT",
           headers: {
             "Content-Type": "application/json",
           },
@@ -162,9 +170,29 @@ export default function CadastrarFuncionariosScreen({ navigation }) {
 
       const result = await response.json();
       if (response.ok) {
-        setModalVisible(true); // Exibe o modal de sucesso
+        setModalVisible(true);
       } else {
-        Alert.alert("Erro", result.error || "Erro ao cadastrar funcionário.");
+        Alert.alert("Erro", result.error || "Erro ao editar funcionário.");
+      }
+    } catch (error) {
+      Alert.alert("Erro", "Erro ao se conectar com o servidor.");
+    }
+  };
+
+  const handleDelete = async () => {
+    try {
+      const response = await fetch(
+        `http://localhost:3000/deleteFuncionario/${funcionario.id}`,
+        {
+          method: "DELETE",
+        }
+      );
+
+      if (response.ok) {
+        Alert.alert("Sucesso", "Funcionário excluído com sucesso.");
+        navigation.navigate("Funcionarios");
+      } else {
+        Alert.alert("Erro", "Erro ao excluir funcionário.");
       }
     } catch (error) {
       Alert.alert("Erro", "Erro ao se conectar com o servidor.");
@@ -177,10 +205,10 @@ export default function CadastrarFuncionariosScreen({ navigation }) {
       showsVerticalScrollIndicator={false}
     >
       <View style={cadastrarFuncionariosStyles.container}>
-        {/* Seção: Informações Pessoais */}
         <Text style={cadastrarFuncionariosStyles.sectionTitle}>
-          Informações Pessoais
+          Editar Funcionário
         </Text>
+
         <Text style={cadastrarFuncionariosStyles.label}>Foto</Text>
         <TouchableOpacity
           onPress={pickImage}
@@ -205,7 +233,7 @@ export default function CadastrarFuncionariosScreen({ navigation }) {
           onChangeText={setNomeCompleto}
           style={[
             cadastrarFuncionariosStyles.input,
-            campoErro.nomeCompleto && cadastrarFuncionariosStyles.errorInput,
+            campoErro.nomeCompleto && { borderColor: "red" },
           ]}
         />
         {campoErro.nomeCompleto && (
@@ -214,7 +242,6 @@ export default function CadastrarFuncionariosScreen({ navigation }) {
           </Text>
         )}
 
-        {/* Campo de Data de Nascimento */}
         <Text style={cadastrarFuncionariosStyles.label}>
           Data de Nascimento
         </Text>
@@ -226,7 +253,7 @@ export default function CadastrarFuncionariosScreen({ navigation }) {
           }
           style={[
             cadastrarFuncionariosStyles.input,
-            campoErro.dataNascimento && cadastrarFuncionariosStyles.errorInput,
+            campoErro.dataNascimento && { borderColor: "red" },
           ]}
           maxLength={10}
           keyboardType="numeric"
@@ -250,7 +277,7 @@ export default function CadastrarFuncionariosScreen({ navigation }) {
           keyboardType="numeric"
           style={[
             cadastrarFuncionariosStyles.input,
-            campoErro.cpf && cadastrarFuncionariosStyles.errorInput,
+            campoErro.cpf && { borderColor: "red" },
           ]}
           maxLength={14}
         />
@@ -260,16 +287,11 @@ export default function CadastrarFuncionariosScreen({ navigation }) {
           </Text>
         )}
 
-        {/* Seção: Informações Cargo */}
-        <Text style={cadastrarFuncionariosStyles.sectionTitle}>
-          Informações Cargo
-        </Text>
-
         <Text style={cadastrarFuncionariosStyles.label}>Cargo</Text>
         <View
           style={[
             cadastrarFuncionariosStyles.pickerContainer,
-            campoErro.cargo && cadastrarFuncionariosStyles.errorInput,
+            campoErro.cargo && { borderColor: "red" },
           ]}
         >
           <Picker
@@ -295,7 +317,7 @@ export default function CadastrarFuncionariosScreen({ navigation }) {
           keyboardType="numeric"
           style={[
             cadastrarFuncionariosStyles.input,
-            campoErro.salario && cadastrarFuncionariosStyles.errorInput,
+            campoErro.salario && { borderColor: "red" },
           ]}
         />
         {campoErro.salario && (
@@ -315,7 +337,7 @@ export default function CadastrarFuncionariosScreen({ navigation }) {
           }
           style={[
             cadastrarFuncionariosStyles.input,
-            campoErro.dataContratacao && cadastrarFuncionariosStyles.errorInput,
+            campoErro.dataContratacao && { borderColor: "red" },
           ]}
           maxLength={10}
           keyboardType="numeric"
@@ -331,11 +353,6 @@ export default function CadastrarFuncionariosScreen({ navigation }) {
           </Text>
         ) : null}
 
-        {/* Seção: Outras Informações */}
-        <Text style={cadastrarFuncionariosStyles.sectionTitle}>
-          Outras Informações
-        </Text>
-
         <Text style={cadastrarFuncionariosStyles.label}>E-mail</Text>
         <TextInput
           placeholder="E-mail"
@@ -344,7 +361,7 @@ export default function CadastrarFuncionariosScreen({ navigation }) {
           keyboardType="email-address"
           style={[
             cadastrarFuncionariosStyles.input,
-            campoErro.email && cadastrarFuncionariosStyles.errorInput,
+            campoErro.email && { borderColor: "red" },
           ]}
         />
         {campoErro.email && (
@@ -361,7 +378,7 @@ export default function CadastrarFuncionariosScreen({ navigation }) {
           keyboardType="phone-pad"
           style={[
             cadastrarFuncionariosStyles.input,
-            campoErro.telefone && cadastrarFuncionariosStyles.errorInput,
+            campoErro.telefone && { borderColor: "red" },
           ]}
           maxLength={15}
         />
@@ -378,7 +395,7 @@ export default function CadastrarFuncionariosScreen({ navigation }) {
           onChangeText={setPix}
           style={[
             cadastrarFuncionariosStyles.input,
-            campoErro.pix && cadastrarFuncionariosStyles.errorInput,
+            campoErro.pix && { borderColor: "red" },
           ]}
         />
         {campoErro.pix && (
@@ -387,13 +404,28 @@ export default function CadastrarFuncionariosScreen({ navigation }) {
           </Text>
         )}
 
-        {/* Botão Cadastrar */}
-        <TouchableOpacity
-          style={cadastrarFuncionariosStyles.button}
-          onPress={handleSubmit}
-        >
-          <Text style={cadastrarFuncionariosStyles.buttonText}>Cadastrar</Text>
-        </TouchableOpacity>
+        {/* Botões de ação */}
+        <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
+          <TouchableOpacity
+            style={[
+              cadastrarFuncionariosStyles.button,
+              { backgroundColor: "red" },
+            ]}
+            onPress={handleDelete}
+          >
+            <Text style={cadastrarFuncionariosStyles.buttonText}>Deletar</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[
+              cadastrarFuncionariosStyles.button,
+              { backgroundColor: "blue" },
+            ]}
+            onPress={handleSubmit}
+          >
+            <Text style={cadastrarFuncionariosStyles.buttonText}>Salvar</Text>
+          </TouchableOpacity>
+        </View>
       </View>
 
       {/* Modal de sucesso */}
@@ -406,7 +438,7 @@ export default function CadastrarFuncionariosScreen({ navigation }) {
         <View style={cadastrarFuncionariosStyles.modalContainer}>
           <View style={cadastrarFuncionariosStyles.modalContent}>
             <Text style={cadastrarFuncionariosStyles.successText}>
-              Cadastrado com sucesso!
+              Edição concluída com sucesso!
             </Text>
             <TouchableOpacity
               style={[
@@ -415,7 +447,7 @@ export default function CadastrarFuncionariosScreen({ navigation }) {
               ]}
               onPress={() => {
                 setModalVisible(false);
-                navigation.goBack();
+                navigation.goBack(); // Volta para a tela anterior apenas ao clicar no botão OK
               }}
             >
               <Text style={cadastrarFuncionariosStyles.buttonText}>OK</Text>

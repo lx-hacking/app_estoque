@@ -42,11 +42,11 @@ export const funcionariosStyles = StyleSheet.create({
     shadowColor: "#000",
     shadowOffset: {
       width: 0,
-      height: 2,
+      height: 2, // Aplica sombra no topo e no bottom
     },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-    elevation: 5,
+    shadowOpacity: 0.3,
+    shadowRadius: 5, // Aumenta o raio da sombra para suavizar
+    elevation: 6, // Elevação para Android (sombra no topo e embaixo)
   },
   row: {
     flexDirection: "row",
@@ -72,6 +72,7 @@ export const funcionariosStyles = StyleSheet.create({
     width: 10,
     height: 100,
     backgroundColor: "tomato",
+    marginLeft: 20, // Espaçamento à esquerda da barra
   },
   label: {
     fontSize: 16,
@@ -86,5 +87,8 @@ export const funcionariosStyles = StyleSheet.create({
   detailRow: {
     flex: 1,
     justifyContent: "center",
+  },
+  disabledButton: {
+    backgroundColor: "#cccccc", // Cor cinza para o botão desabilitado
   },
 });

@@ -23,6 +23,7 @@ const capitalizeFirstLetter = (str) => {
 export default function FuncionariosScreen({ navigation }) {
   const [funcionarios, setFuncionarios] = useState([]);
   const [loading, setLoading] = useState(true); // Estado para mostrar indicador de carregamento
+  const [selectedFuncionario, setSelectedFuncionario] = useState(null); // Estado para armazenar o funcionário selecionado
   const ws = useRef(null); // Referência para WebSocket
 
   // Função para buscar os funcionários do backend
@@ -82,21 +83,35 @@ export default function FuncionariosScreen({ navigation }) {
   }, []);
 
   const handleCadastrar = () => {
-    // Navegar para a tela de cadastro de funcionário
     navigation.navigate("CadastrarFuncionario");
   };
 
-  // Função para renderizar cada funcionário
+  const handleEditar = () => {
+    if (selectedFuncionario) {
+      navigation.navigate("EditarFuncionario", {
+        funcionario: selectedFuncionario,
+      });
+    }
+  };
+
   const renderFuncionario = ({ item }) => {
+    const isSelected =
+      selectedFuncionario && selectedFuncionario.id === item.id;
+
     return (
       <TouchableOpacity
-        style={funcionariosStyles.card}
+        style={[
+          funcionariosStyles.card,
+          isSelected && { backgroundColor: "#e3f7fa" }, // Aplica o fundo azul claro se o item estiver selecionado
+        ]}
         onPress={() =>
-          navigation.navigate("DetalhesFuncionario", { funcionario: item })
-        }
+          setSelectedFuncionario(
+            isSelected ? null : item // Desmarca se for o mesmo item
+          )
+        } // Alterna a seleção do funcionário
       >
         <View style={funcionariosStyles.row}>
-          {/* Coluna 1: Foto (35% da largura) */}
+          {/* Coluna 1: Foto */}
           <View style={funcionariosStyles.imageColumn}>
             <Image
               source={{ uri: `data:image/jpeg;base64,${item.foto}` }}
@@ -107,37 +122,29 @@ export default function FuncionariosScreen({ navigation }) {
           {/* Barra Vertical */}
           <View style={funcionariosStyles.verticalBar}></View>
 
-          {/* Coluna 2: Informações (50% da largura) */}
+          {/* Coluna 2: Informações */}
           <View style={funcionariosStyles.detailsColumn}>
-            <View style={funcionariosStyles.detailRow}>
-              <Text style={funcionariosStyles.label}>
-                Nome:{" "}
-                <Text style={funcionariosStyles.value}>
-                  {capitalizeFirstLetter(item.nome_completo)}
-                </Text>
+            <Text style={funcionariosStyles.label}>
+              Nome:{" "}
+              <Text style={funcionariosStyles.value}>
+                {capitalizeFirstLetter(item.nome_completo)}
               </Text>
-            </View>
-            <View style={funcionariosStyles.detailRow}>
-              <Text style={funcionariosStyles.label}>
-                Cargo:{" "}
-                <Text style={funcionariosStyles.value}>
-                  {capitalizeFirstLetter(item.cargo)}
-                </Text>
+            </Text>
+            <Text style={funcionariosStyles.label}>
+              Cargo:{" "}
+              <Text style={funcionariosStyles.value}>
+                {capitalizeFirstLetter(item.cargo)}
               </Text>
-            </View>
-            <View style={funcionariosStyles.detailRow}>
-              <Text style={funcionariosStyles.label}>
-                Salário:{" "}
-                <Text style={funcionariosStyles.value}>
-                  R$ {parseFloat(item.salario).toFixed(2)}
-                </Text>
+            </Text>
+            <Text style={funcionariosStyles.label}>
+              Salário:{" "}
+              <Text style={funcionariosStyles.value}>
+                R$ {parseFloat(item.salario).toFixed(2)}
               </Text>
-            </View>
-            <View style={funcionariosStyles.detailRow}>
-              <Text style={funcionariosStyles.label}>
-                CPF: <Text style={funcionariosStyles.value}>{item.cpf}</Text>
-              </Text>
-            </View>
+            </Text>
+            <Text style={funcionariosStyles.label}>
+              CPF: <Text style={funcionariosStyles.value}>{item.cpf}</Text>
+            </Text>
           </View>
         </View>
       </TouchableOpacity>
@@ -155,7 +162,14 @@ export default function FuncionariosScreen({ navigation }) {
           <Ionicons name="add-circle-outline" size={20} color="#fff" />
           <Text style={funcionariosStyles.buttonText}>Cadastrar</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={funcionariosStyles.button}>
+        <TouchableOpacity
+          style={[
+            funcionariosStyles.button,
+            !selectedFuncionario && funcionariosStyles.disabledButton,
+          ]} // Aplica a cor cinza quando o botão está desabilitado
+          onPress={handleEditar}
+          disabled={!selectedFuncionario} // Desabilita o botão quando nenhum funcionário está selecionado
+        >
           <Ionicons name="create-outline" size={20} color="#fff" />
           <Text style={funcionariosStyles.buttonText}>Editar</Text>
         </TouchableOpacity>
@@ -169,10 +183,10 @@ export default function FuncionariosScreen({ navigation }) {
         <ActivityIndicator size="large" color="#0000ff" />
       ) : (
         <FlatList
-          data={funcionarios} // Dados dos funcionários
-          keyExtractor={(item) => item.id.toString()} // Chave única
-          renderItem={renderFuncionario} // Função de renderização de cada item
-          showsVerticalScrollIndicator={false} // Desativa a barra de rolagem
+          data={funcionarios}
+          keyExtractor={(item) => item.id.toString()}
+          renderItem={renderFuncionario}
+          showsVerticalScrollIndicator={false}
         />
       )}
     </View>

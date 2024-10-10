@@ -48,6 +48,22 @@ const isValidDate = (dateString) => {
   return regex.test(dateString);
 };
 
+// Função auxiliar para formatar datas para dd/mm/yyyy
+const formatarData = (data) => {
+  if (!data) return ""; // Verifica se a data é nula ou indefinida
+
+  const dataObj = new Date(data);
+  if (isNaN(dataObj.getTime())) {
+    return ""; // Retorna string vazia se a data for inválida
+  }
+
+  const day = String(dataObj.getUTCDate()).padStart(2, "0");
+  const month = String(dataObj.getUTCMonth() + 1).padStart(2, "0");
+  const year = dataObj.getUTCFullYear();
+
+  return `${day}/${month}/${year}`;
+};
+
 // Endpoint para cadastrar funcionários
 app.post("/cadastrarFuncionario", (req, res) => {
   try {
@@ -60,8 +76,8 @@ app.post("/cadastrarFuncionario", (req, res) => {
       data_contratacao,
       email,
       image,
-      telefone, // Adiciona o campo telefone
-      pix, // Adiciona o campo pix
+      telefone,
+      pix,
     } = req.body;
 
     if (!isValidDate(data_nascimento) || !isValidDate(data_contratacao)) {
@@ -75,7 +91,6 @@ app.post("/cadastrarFuncionario", (req, res) => {
       return res.status(400).json({ error: "Erro: Foto não foi recebida." });
     }
 
-    // Decodifica a imagem de base64 para binário
     const imagemBuffer = Buffer.from(image, "base64");
 
     const sql = `
@@ -94,8 +109,8 @@ app.post("/cadastrarFuncionario", (req, res) => {
         data_contratacao,
         email,
         imagemBuffer,
-        telefone, // Inclui o telefone na query
-        pix, // Inclui o pix na query
+        telefone,
+        pix,
       ],
       (err, result) => {
         if (err) {
@@ -118,6 +133,93 @@ app.post("/cadastrarFuncionario", (req, res) => {
   }
 });
 
+// Endpoint para editar funcionários (com ID na URL)
+app.put("/editarFuncionario/:id", (req, res) => {
+  try {
+    const { id } = req.params;
+    const {
+      nome_completo,
+      data_nascimento,
+      cpf,
+      cargo,
+      salario,
+      data_contratacao,
+      email,
+      telefone,
+      pix,
+      image,
+    } = req.body;
+
+    // Verifica se as datas estão no formato válido
+    if (!isValidDate(data_nascimento) || !isValidDate(data_contratacao)) {
+      return res
+        .status(400)
+        .json({ error: "Formato de data inválido. Use o formato YYYY-MM-DD." });
+    }
+
+    // Se houver imagem, converte para binário
+    const imagemBuffer = image ? Buffer.from(image, "base64") : null;
+
+    const sql = `
+      UPDATE funcionarios 
+      SET nome_completo = ?, data_nascimento = ?, cpf = ?, cargo = ?, salario = ?, 
+          data_contratacao = ?, email = ?, telefone = ?, pix = ?, foto = ?
+      WHERE id = ?
+    `;
+
+    db.query(
+      sql,
+      [
+        nome_completo,
+        data_nascimento,
+        cpf,
+        cargo,
+        parseFloat(salario),
+        data_contratacao,
+        email,
+        telefone,
+        pix,
+        imagemBuffer,
+        id,
+      ],
+      (err, result) => {
+        if (err) {
+          console.error("Erro ao editar funcionário:", err);
+          return res
+            .status(500)
+            .json({ error: `Erro ao editar funcionário: ${err.message}` });
+        }
+        res
+          .status(200)
+          .json({ message: "Funcionário atualizado com sucesso!" });
+
+        // Notifica todos os clientes via WebSocket
+        broadcastUpdate("UPDATE_FUNCIONARIO");
+      }
+    );
+  } catch (error) {
+    console.error("Erro inesperado ao processar a requisição:", error);
+    res.status(500).json({ error: `Erro inesperado: ${error.message}` });
+  }
+});
+
+// Endpoint para deletar um funcionário
+app.delete("/deleteFuncionario/:id", (req, res) => {
+  const { id } = req.params;
+
+  const sql = `DELETE FROM funcionarios WHERE id = ?`;
+  db.query(sql, [id], (err, result) => {
+    if (err) {
+      console.error("Erro ao deletar funcionário:", err);
+      return res.status(500).json({ error: "Erro ao deletar funcionário." });
+    }
+    res.status(200).json({ message: "Funcionário deletado com sucesso!" });
+
+    // Notifica todos os clientes via WebSocket
+    broadcastUpdate("DELETE_FUNCIONARIO");
+  });
+});
+
 // Endpoint para salvar o produto no banco de dados
 app.post("/addproduct", (req, res) => {
   try {
@@ -129,7 +231,6 @@ app.post("/addproduct", (req, res) => {
       return res.status(400).json({ error: "Erro: Imagem não foi recebida." });
     }
 
-    // Decodifica a imagem de base64 para binário
     const imagemBuffer = Buffer.from(image, "base64");
 
     const sql = `INSERT INTO produtos (nome, descricao, valor_venda, quantidade, preco_custo, imagem) VALUES (?, ?, ?, ?, ?, ?)`;
@@ -244,7 +345,11 @@ app.get("/products", (req, res) => {
 
 // Endpoint para buscar todos os funcionários cadastrados
 app.get("/getFuncionarios", (req, res) => {
-  const sql = `SELECT id, nome_completo, cargo, salario, cpf, foto FROM funcionarios`;
+  const sql = `SELECT id, nome_completo, cargo, salario, cpf, foto, 
+                     DATE_FORMAT(data_nascimento, '%Y-%m-%d') as data_nascimento,
+                     DATE_FORMAT(data_contratacao, '%Y-%m-%d') as data_contratacao, 
+                     email, telefone, pix 
+              FROM funcionarios`;
 
   db.query(sql, (err, results) => {
     if (err) {
@@ -252,10 +357,14 @@ app.get("/getFuncionarios", (req, res) => {
       return res.status(500).json({ error: "Erro ao buscar funcionários." });
     }
 
-    // Converte a imagem de BLOB para base64
+    // Formatação das datas e garantia de que o campo não será undefined
     const funcionarios = results.map((funcionario) => ({
       ...funcionario,
       foto: funcionario.foto ? funcionario.foto.toString("base64") : null,
+      data_nascimento: formatarData(funcionario.data_nascimento), // Formata a data
+      data_contratacao: formatarData(funcionario.data_contratacao), // Formata a data
+      telefone: funcionario.telefone || "", // Garante que telefone seja retornado
+      pix: funcionario.pix || "", // Garante que o PIX seja retornado
     }));
 
     res.status(200).json(funcionarios);

@@ -13,12 +13,13 @@ import AddProduct from "./screens/AddProduct"; // Tela de cadastro de produto
 import EditProduct from "./screens/EditProduct"; // Tela de edição de produto
 import FuncionariosScreen from "./screens/FuncionariosScreen"; // Tela de funcionários
 import CadastrarFuncionariosScreen from "./screens/CadastrarFuncionariosScreen"; // Tela de cadastro de funcionários
+import EditarFuncionarioScreen from "./screens/EditarFuncionarioScreen"; // Tela de edição de funcionários
 
 // Criando o Bottom Tab Navigator e o Stack Navigator
 const Tab = createBottomTabNavigator();
 const Stack = createStackNavigator();
 
-// Stack Navigator para gerenciar as telas relacionadas ao estoque e funcionários
+// Stack Navigator para gerenciar as telas relacionadas ao estoque
 function InventoryStack() {
   return (
     <Stack.Navigator screenOptions={{ headerTitleAlign: "center" }}>
@@ -65,6 +66,13 @@ function FuncionariosStack() {
           title: "Cadastrar Funcionário",
         }}
       />
+      <Stack.Screen
+        name="EditarFuncionario"
+        component={EditarFuncionarioScreen} // Adicionando a tela de edição de funcionário
+        options={{
+          title: "Editar Funcionário",
+        }}
+      />
     </Stack.Navigator>
   );
 }
@@ -106,7 +114,7 @@ export default function App() {
         />
         <Tab.Screen
           name="Funcionários"
-          component={FuncionariosStack} // Alteração para utilizar o Stack Navigator dos funcionários
+          component={FuncionariosStack} // Utilizando o Stack Navigator dos funcionários
           options={{ headerShown: false }} // Remove o cabeçalho do Stack Navigator no Tab Navigator
         />
       </Tab.Navigator>
