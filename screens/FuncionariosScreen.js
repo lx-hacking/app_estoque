@@ -54,8 +54,11 @@ export default function FuncionariosScreen({ navigation }) {
 
     ws.current.onmessage = (message) => {
       const data = JSON.parse(message.data);
-      if (data.type === "UPDATE_FUNCIONARIO") {
-        // Quando um novo funcionário for cadastrado, atualiza a lista
+      if (
+        data.type === "UPDATE_FUNCIONARIO" ||
+        data.type === "DELETE_FUNCIONARIO"
+      ) {
+        // Quando um novo funcionário for cadastrado ou deletado, atualiza a lista
         fetchFuncionarios();
       }
     };

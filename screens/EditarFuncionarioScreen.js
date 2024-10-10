@@ -4,7 +4,6 @@ import {
   Text,
   TextInput,
   TouchableOpacity,
-  Alert,
   Image,
   ScrollView,
   Modal,
@@ -34,7 +33,9 @@ export default function EditarFuncionarioScreen({ route, navigation }) {
   const [dataContratacao, setDataContratacao] = useState(
     funcionario.data_contratacao || ""
   );
-  const [modalVisible, setModalVisible] = useState(false); // Estado do Modal
+  const [modalVisible, setModalVisible] = useState(false); // Estado do Modal de sucesso de edição
+  const [deleteModalVisible, setDeleteModalVisible] = useState(false); // Estado do Modal de deleção
+  const [confirmDeleteVisible, setConfirmDeleteVisible] = useState(false); // Modal para confirmar exclusão
   const [dataNascimentoError, setDataNascimentoError] = useState("");
   const [dataContratacaoError, setDataContratacaoError] = useState("");
   const [campoErro, setCampoErro] = useState({}); // Estado para controle dos erros de campo vazio
@@ -133,12 +134,12 @@ export default function EditarFuncionarioScreen({ route, navigation }) {
 
   const handleSubmit = async () => {
     if (!validarCampos()) {
-      Alert.alert("Erro", "Preencha todos os campos obrigatórios.");
+      alert("Preencha todos os campos obrigatórios.");
       return;
     }
 
     if (dataNascimentoError || dataContratacaoError) {
-      Alert.alert("Erro", "Corrija os erros nas datas.");
+      alert("Corrija os erros nas datas.");
       return;
     }
 
@@ -170,12 +171,12 @@ export default function EditarFuncionarioScreen({ route, navigation }) {
 
       const result = await response.json();
       if (response.ok) {
-        setModalVisible(true);
+        setModalVisible(true); // Exibe o modal de sucesso ao salvar
       } else {
-        Alert.alert("Erro", result.error || "Erro ao editar funcionário.");
+        alert(result.error || "Erro ao editar funcionário.");
       }
     } catch (error) {
-      Alert.alert("Erro", "Erro ao se conectar com o servidor.");
+      alert("Erro ao se conectar com o servidor.");
     }
   };
 
@@ -189,13 +190,13 @@ export default function EditarFuncionarioScreen({ route, navigation }) {
       );
 
       if (response.ok) {
-        Alert.alert("Sucesso", "Funcionário excluído com sucesso.");
-        navigation.navigate("Funcionarios");
+        setConfirmDeleteVisible(false); // Fecha o modal de confirmação
+        setDeleteModalVisible(true); // Abre o modal de sucesso
       } else {
-        Alert.alert("Erro", "Erro ao excluir funcionário.");
+        alert("Erro ao excluir funcionário.");
       }
     } catch (error) {
-      Alert.alert("Erro", "Erro ao se conectar com o servidor.");
+      alert("Erro ao se conectar com o servidor.");
     }
   };
 
@@ -411,7 +412,7 @@ export default function EditarFuncionarioScreen({ route, navigation }) {
               cadastrarFuncionariosStyles.button,
               { backgroundColor: "red" },
             ]}
-            onPress={handleDelete}
+            onPress={() => setConfirmDeleteVisible(true)} // Abre o modal de confirmação de exclusão
           >
             <Text style={cadastrarFuncionariosStyles.buttonText}>Deletar</Text>
           </TouchableOpacity>
@@ -428,7 +429,75 @@ export default function EditarFuncionarioScreen({ route, navigation }) {
         </View>
       </View>
 
-      {/* Modal de sucesso */}
+      {/* Modal de confirmação de exclusão */}
+      <Modal
+        transparent={true}
+        visible={confirmDeleteVisible}
+        animationType="fade"
+        onRequestClose={() => setConfirmDeleteVisible(false)}
+      >
+        <View style={cadastrarFuncionariosStyles.modalContainer}>
+          <View style={cadastrarFuncionariosStyles.modalContent}>
+            <Text style={cadastrarFuncionariosStyles.successText}>
+              Tem certeza que deseja excluir este funcionário?
+            </Text>
+            <View
+              style={{ flexDirection: "row", justifyContent: "space-between" }}
+            >
+              <TouchableOpacity
+                style={[
+                  cadastrarFuncionariosStyles.button,
+                  { backgroundColor: "#4BB543" },
+                ]}
+                onPress={handleDelete} // Exclui o funcionário
+              >
+                <Text style={cadastrarFuncionariosStyles.buttonText}>OK</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[
+                  cadastrarFuncionariosStyles.button,
+                  { backgroundColor: "gray" },
+                ]}
+                onPress={() => setConfirmDeleteVisible(false)} // Fecha o modal de confirmação
+              >
+                <Text style={cadastrarFuncionariosStyles.buttonText}>
+                  Cancelar
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
+      {/* Modal de sucesso na exclusão */}
+      <Modal
+        transparent={true}
+        visible={deleteModalVisible}
+        animationType="fade"
+        onRequestClose={() => setDeleteModalVisible(false)}
+      >
+        <View style={cadastrarFuncionariosStyles.modalContainer}>
+          <View style={cadastrarFuncionariosStyles.modalContent}>
+            <Text style={cadastrarFuncionariosStyles.successText}>
+              Funcionário excluído com sucesso!
+            </Text>
+            <TouchableOpacity
+              style={[
+                cadastrarFuncionariosStyles.button,
+                { backgroundColor: "#4BB543" },
+              ]}
+              onPress={() => {
+                setDeleteModalVisible(false);
+                navigation.navigate("Funcionarios"); // Volta para a lista de funcionários
+              }}
+            >
+              <Text style={cadastrarFuncionariosStyles.buttonText}>OK</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+
+      {/* Modal de sucesso na edição */}
       <Modal
         transparent={true}
         visible={modalVisible}
@@ -438,7 +507,7 @@ export default function EditarFuncionarioScreen({ route, navigation }) {
         <View style={cadastrarFuncionariosStyles.modalContainer}>
           <View style={cadastrarFuncionariosStyles.modalContent}>
             <Text style={cadastrarFuncionariosStyles.successText}>
-              Edição concluída com sucesso!
+              Alterações salvas com sucesso!
             </Text>
             <TouchableOpacity
               style={[
@@ -447,7 +516,7 @@ export default function EditarFuncionarioScreen({ route, navigation }) {
               ]}
               onPress={() => {
                 setModalVisible(false);
-                navigation.goBack(); // Volta para a tela anterior apenas ao clicar no botão OK
+                navigation.navigate("Funcionarios"); // Volta para a lista de funcionários
               }}
             >
               <Text style={cadastrarFuncionariosStyles.buttonText}>OK</Text>
