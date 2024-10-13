@@ -3,6 +3,7 @@ const mysql = require("mysql");
 const cors = require("cors");
 const http = require("http");
 const WebSocket = require("ws");
+const bcrypt = require("bcrypt"); // Importa a biblioteca bcrypt
 
 const app = express();
 const port = 3000;
@@ -509,6 +510,54 @@ app.post("/finalizarVenda", (req, res) => {
         error: `Erro ao processar a venda: ${error}`,
       });
     });
+});
+
+app.post("/login", (req, res) => {
+  const { email, senha } = req.body;
+
+  // Verifica se o e-mail e a senha foram fornecidos
+  if (!email || !senha) {
+    return res.status(400).json({ error: "E-mail e senha são obrigatórios." });
+  }
+
+  // Consulta para encontrar o funcionário com o e-mail fornecido
+  const sql = `SELECT * FROM funcionarios WHERE email = ?`;
+  db.query(sql, [email], (err, results) => {
+    if (err) {
+      console.error("Erro ao buscar funcionário:", err);
+      return res.status(500).json({ error: "Erro ao buscar funcionário." });
+    }
+
+    if (results.length === 0) {
+      return res.status(401).json({ error: "E-mail ou senha inválidos." });
+    }
+
+    const funcionario = results[0];
+
+    // Comparar a senha fornecida com a senha armazenada
+    bcrypt.compare(senha, funcionario.senha, (err, isMatch) => {
+      if (err) {
+        console.error("Erro ao comparar senhas:", err);
+        return res
+          .status(500)
+          .json({ error: "Erro ao processar a autenticação." });
+      }
+
+      if (!isMatch) {
+        return res.status(401).json({ error: "E-mail ou senha inválidos." });
+      }
+
+      // Se o login for bem-sucedido, retorne os dados do funcionário
+      res.status(200).json({
+        message: "Login realizado com sucesso!",
+        funcionario: {
+          id: funcionario.id,
+          nome_completo: funcionario.nome_completo,
+          cargo: funcionario.cargo,
+        },
+      });
+    });
+  });
 });
 
 // Inicia o servidor HTTP com suporte a WebSocket
