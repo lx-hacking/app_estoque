@@ -50,6 +50,10 @@ const AuthStyle = StyleSheet.create({
     marginBottom: 8,
     fontSize: 14, // Tamanho da fonte
   },
+  linkContainer: {
+    alignItems: "center", // Centraliza os textos
+    marginVertical: 10, // Adiciona espaço vertical ao redor dos links
+  },
 });
 
 export default AuthStyle;

@@ -1,5 +1,12 @@
 import React, { useState } from "react";
-import { View, Text, TextInput, TouchableOpacity, Alert } from "react-native";
+import {
+  View,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  Alert,
+  Image,
+} from "react-native"; // Importa o componente Image
 import AuthStyle from "./AuthStyle";
 import { useAuth } from "../AuthContext"; // Importa o contexto de autenticação
 
@@ -43,7 +50,10 @@ const LoginScreen = ({ navigation }) => {
   return (
     <View style={AuthStyle.container}>
       <View style={AuthStyle.logo}>
-        <Text style={{ fontSize: 24 }}>Logo Aqui</Text>
+        <Image
+          source={require("../assets/logo.webp")} // Adiciona a logo aqui
+          style={{ width: "100%", height: "100%", resizeMode: "contain" }} // Ajusta o estilo da imagem
+        />
       </View>
       {error ? <Text style={AuthStyle.errorText}>{error}</Text> : null}
       <TextInput
@@ -64,9 +74,30 @@ const LoginScreen = ({ navigation }) => {
       <TouchableOpacity style={AuthStyle.button} onPress={handleLogin}>
         <Text style={AuthStyle.buttonText}>Login</Text>
       </TouchableOpacity>
-      <View style={AuthStyle.buttonContainer}>
+      <View style={AuthStyle.linkContainer}>
+        <TouchableOpacity onPress={() => Alert.alert("Recuperar Senha")}>
+          <Text
+            style={[
+              AuthStyle.linkText,
+              { color: "tomato", fontWeight: "bold", marginBottom: 5 },
+            ]}
+          >
+            Esqueceu a senha?
+          </Text>
+        </TouchableOpacity>
         <TouchableOpacity onPress={() => Alert.alert("Ir para Registro")}>
-          <Text style={AuthStyle.linkText}>Registrar-se</Text>
+          {" "}
+          {/* Tornando todo o texto clicável */}
+          <Text
+            style={{
+              color: "tomato",
+              fontWeight: "bold",
+              textAlign: "center",
+              marginVertical: 5,
+            }}
+          >
+            Não possui login? Registre-se
+          </Text>
         </TouchableOpacity>
       </View>
     </View>
