@@ -18,6 +18,7 @@ import EditarFuncionarioScreen from "./screens/EditarFuncionarioScreen";
 import LoginScreen from "./screens/LoginScreen";
 import RegisterScreen from "./screens/RegisterScreen";
 import VerificationCodeScreen from "./screens/VerificationCodeScreen"; // Importando a tela de verificação
+import RegisterPasswordScreen from "./screens/RegisterPasswordScreen"; // Importando a tela de cadastro de senha
 
 const Tab = createBottomTabNavigator();
 const Stack = createStackNavigator();
@@ -40,6 +41,11 @@ function AuthStack() {
         name="VerificationCode" // Adicionando a tela de verificação
         component={VerificationCodeScreen}
         options={{ title: "Verificação" }} // Título da tela de verificação
+      />
+      <Stack.Screen
+        name="RegisterPassword" // Tela de cadastro de senha
+        component={RegisterPasswordScreen}
+        options={{ title: "Cadastrar Senha" }} // Título da tela de cadastro de senha
       />
     </Stack.Navigator>
   );

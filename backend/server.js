@@ -648,6 +648,53 @@ app.post("/salvar-codigo", (req, res) => {
   });
 });
 
+app.post("/validar-codigo", (req, res) => {
+  const { email, codigo } = req.body;
+
+  const sql =
+    "SELECT * FROM codigos_verificacao WHERE email = ? AND codigo = ?";
+  db.query(sql, [email, codigo], (err, results) => {
+    if (err) {
+      return res
+        .status(500)
+        .json({ success: false, error: "Erro ao validar código." });
+    }
+
+    if (results.length > 0) {
+      return res.status(200).json({ success: true });
+    } else {
+      return res
+        .status(400)
+        .json({ success: false, error: "Código inválido." });
+    }
+  });
+});
+
+// Endpoint para salvar a senha e atualizar senha_cadastrada
+app.post("/salvar-senha", (req, res) => {
+  const { email, senha } = req.body;
+
+  // Atualiza a tabela funcionarios com a nova senha e altera senha_cadastrada para true
+  const sql = `UPDATE funcionarios SET senha = ?, senha_cadastrada = 1 WHERE email = ?`;
+
+  db.query(sql, [senha, email], (err, result) => {
+    if (err) {
+      console.error("Erro ao atualizar a senha:", err);
+      return res
+        .status(500)
+        .json({ success: false, error: "Erro ao atualizar a senha." });
+    }
+
+    if (result.affectedRows > 0) {
+      return res.status(200).json({ success: true });
+    } else {
+      return res
+        .status(400)
+        .json({ success: false, error: "E-mail não encontrado." });
+    }
+  });
+});
+
 // Inicia o servidor HTTP com suporte a WebSocket
 server.listen(port, () => {
   console.log(`Servidor rodando em http://localhost:${port}`);

@@ -15,6 +15,7 @@ const RegisterScreen = ({ navigation }) => {
   const [loadingText, setLoadingText] = useState("Registrar"); // Texto do botão
   const [loadingDots, setLoadingDots] = useState(""); // Controle dos pontos de carregamento
   const [isLoading, setIsLoading] = useState(false); // Estado para controlar se está carregando
+  const [errorMessage, setErrorMessage] = useState(""); // Estado para a mensagem de erro
 
   useEffect(() => {
     let interval;
@@ -34,40 +35,49 @@ const RegisterScreen = ({ navigation }) => {
 
     setIsLoading(true); // Ativa o carregamento
     setLoadingText("Gerando Código" + loadingDots); // Muda o texto do botão
+    setErrorMessage(""); // Limpa a mensagem de erro
 
     try {
-      // Verifica se o email existe e se a senha não está registrada
+      // Verifica se o email existe
       const response = await axios.post("http://localhost:3000/check-email", {
         email,
       });
 
       console.log("Resposta do servidor:", response.data); // Log da resposta do servidor
 
-      if (response.data.exists && !response.data.senha_registrada) {
-        // Gera um código de verificação
-        const codigoVerificacao = Math.floor(
-          100000 + Math.random() * 900000
-        ).toString();
-        console.log("Código gerado:", codigoVerificacao); // Log do código gerado
+      if (response.data.exists) {
+        if (response.data.senha_registrada) {
+          setErrorMessage("Usuário já cadastrado."); // Define a mensagem de erro
+        } else {
+          // Gera um código de verificação
+          const codigoVerificacao = Math.floor(
+            100000 + Math.random() * 900000
+          ).toString();
+          console.log("Código gerado:", codigoVerificacao); // Log do código gerado
 
-        // Envia o código de verificação para o e-mail
-        await axios.post("http://localhost:3000/enviar-codigo", {
-          email,
-          codigo: codigoVerificacao,
-        });
+          // Envia o código de verificação para o e-mail
+          await axios.post("http://localhost:3000/enviar-codigo", {
+            email,
+            codigo: codigoVerificacao,
+          });
 
-        // Salva o código na tabela codigos_verificacao
-        await axios.post("http://localhost:3000/salvar-codigo", {
-          email,
-          codigo: codigoVerificacao,
-        });
+          // Salva o código na tabela codigos_verificacao
+          await axios.post("http://localhost:3000/salvar-codigo", {
+            email,
+            codigo: codigoVerificacao,
+          });
 
-        Alert.alert("Sucesso", "Código de verificação enviado para o e-mail.");
-        navigation.navigate("VerificationCode", { email }); // Navega para a tela de verificação do código
-      } else if (response.data.exists && response.data.senha_registrada) {
-        Alert.alert("Erro", "Usuário já registrado com senha.");
+          Alert.alert(
+            "Sucesso",
+            "Código de verificação enviado para o e-mail."
+          );
+          navigation.navigate("VerificationCode", {
+            email,
+            codigoEnviado: codigoVerificacao,
+          }); // Passa o código gerado para a próxima tela
+        }
       } else {
-        Alert.alert("Erro", "E-mail não encontrado.");
+        setErrorMessage("Email não cadastrado"); // Define a mensagem de erro
       }
     } catch (error) {
       console.error("Erro:", error); // Log do erro
@@ -105,6 +115,10 @@ const RegisterScreen = ({ navigation }) => {
           {isLoading ? "Gerando Código" + loadingDots : "Registrar"}
         </Text>
       </TouchableOpacity>
+
+      {errorMessage ? ( // Exibe a mensagem de erro se existir
+        <Text style={{ color: "red", marginTop: 10 }}>{errorMessage}</Text>
+      ) : null}
     </View>
   );
 };
