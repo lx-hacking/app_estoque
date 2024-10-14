@@ -4,6 +4,7 @@ const cors = require("cors");
 const http = require("http");
 const WebSocket = require("ws");
 const bcrypt = require("bcrypt"); // Importa a biblioteca bcrypt
+const nodemailer = require("nodemailer"); // Importa a biblioteca Nodemailer
 
 const app = express();
 const port = 3000;
@@ -512,6 +513,7 @@ app.post("/finalizarVenda", (req, res) => {
     });
 });
 
+// Endpoint de login
 app.post("/login", (req, res) => {
   const { email, senha } = req.body;
 
@@ -557,6 +559,92 @@ app.post("/login", (req, res) => {
         },
       });
     });
+  });
+});
+
+// Endpoint para verificar e-mail e se a senha está registrada
+app.post("/check-email", (req, res) => {
+  const { email } = req.body;
+
+  const sql = "SELECT senha_registrada FROM funcionarios WHERE email = ?";
+  db.query(sql, [email], (err, results) => {
+    if (err) {
+      return res.status(500).json({ error: "Erro ao verificar e-mail." });
+    }
+
+    if (results.length === 0) {
+      return res.status(200).json({ exists: false }); // E-mail não existe
+    }
+
+    const { senha_registrada } = results[0];
+    res.status(200).json({ exists: true, senha_registrada });
+  });
+});
+
+// Configuração do Nodemailer
+const transporter = nodemailer.createTransport({
+  service: "gmail",
+  auth: {
+    user: "samineto@gmail.com", // Seu e-mail
+    pass: "zehn ahfa clrr tzbu", // Sua senha
+  },
+});
+
+// Endpoint para enviar código de verificação por e-mail
+app.post("/enviar-codigo", async (req, res) => {
+  const { email, codigo } = req.body;
+
+  const mailOptions = {
+    from: "samineto@gmail.com",
+    to: email,
+    subject: "Código de Verificação",
+    text: `Seu código de verificação é: ${codigo}`,
+  };
+
+  try {
+    await transporter.sendMail(mailOptions);
+    console.log("E-mail enviado com sucesso."); // Log de sucesso
+    res.status(200).send("Código enviado com sucesso.");
+  } catch (error) {
+    console.error("Erro ao enviar o e-mail:", error); // Log do erro
+    res.status(500).send("Erro ao enviar o código.");
+  }
+});
+
+// Endpoint para salvar o código de verificação na tabela
+app.post("/salvar-codigo", (req, res) => {
+  const { email, codigo } = req.body;
+  const dataEnvio = new Date();
+
+  const sqlCheck = `SELECT * FROM codigos_verificacao WHERE email = ?`;
+
+  db.query(sqlCheck, [email], (err, results) => {
+    if (err) {
+      console.error("Erro ao verificar código de verificação:", err);
+      return res.status(500).json({ error: "Erro ao verificar código." });
+    }
+
+    if (results.length > 0) {
+      // Se o e-mail já existe, atualize o código
+      const sqlUpdate = `UPDATE codigos_verificacao SET codigo = ?, data_envio = ? WHERE email = ?`;
+      db.query(sqlUpdate, [codigo, dataEnvio, email], (err) => {
+        if (err) {
+          console.error("Erro ao atualizar código de verificação:", err);
+          return res.status(500).json({ error: "Erro ao atualizar código." });
+        }
+        return res.status(200).send("Código atualizado com sucesso.");
+      });
+    } else {
+      // Se não existe, insira um novo registro
+      const sqlInsert = `INSERT INTO codigos_verificacao (email, codigo, data_envio) VALUES (?, ?, ?)`;
+      db.query(sqlInsert, [email, codigo, dataEnvio], (err) => {
+        if (err) {
+          console.error("Erro ao salvar código de verificação:", err);
+          return res.status(500).json({ error: "Erro ao salvar código." });
+        }
+        return res.status(201).send("Código salvo com sucesso.");
+      });
+    }
   });
 });
 

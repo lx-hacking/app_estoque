@@ -3,7 +3,7 @@ import { NavigationContainer } from "@react-navigation/native";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { createStackNavigator } from "@react-navigation/stack";
 import { Ionicons } from "@expo/vector-icons";
-import { AuthProvider } from "./AuthContext"; // Certifique-se de que o caminho está correto
+import { AuthProvider } from "./AuthContext";
 
 // Importando telas
 import HomeScreen from "./screens/HomeScreen";
@@ -16,79 +16,86 @@ import FuncionariosScreen from "./screens/FuncionariosScreen";
 import CadastrarFuncionariosScreen from "./screens/CadastrarFuncionariosScreen";
 import EditarFuncionarioScreen from "./screens/EditarFuncionarioScreen";
 import LoginScreen from "./screens/LoginScreen";
+import RegisterScreen from "./screens/RegisterScreen";
+import VerificationCodeScreen from "./screens/VerificationCodeScreen"; // Importando a tela de verificação
 
 const Tab = createBottomTabNavigator();
 const Stack = createStackNavigator();
 
-function InventoryStack() {
+// Stack de autenticação com título centralizado e seta de retorno
+function AuthStack() {
   return (
     <Stack.Navigator screenOptions={{ headerTitleAlign: "center" }}>
       <Stack.Screen
-        name="Inventory"
-        component={InventoryScreen}
-        options={{
-          title: "Estoque", // Exibe o título
-          headerLeft: () => null, // Remove a seta de voltar
-        }}
+        name="Login"
+        component={LoginScreen}
+        options={{ title: "Login" }} // Título da tela de login
       />
       <Stack.Screen
-        name="AddProduct"
-        component={AddProduct}
-        options={{ title: "Cadastrar Produto" }}
+        name="Register"
+        component={RegisterScreen}
+        options={{ title: "Registrar" }} // Título da tela de registro
       />
       <Stack.Screen
-        name="EditProduct"
-        component={EditProduct}
-        options={{ title: "Editar Produtos" }}
+        name="VerificationCode" // Adicionando a tela de verificação
+        component={VerificationCodeScreen}
+        options={{ title: "Verificação" }} // Título da tela de verificação
       />
     </Stack.Navigator>
   );
 }
 
+// Stack para as telas de Funcionários
 function FuncionariosStack() {
   return (
-    <Stack.Navigator screenOptions={{ headerTitleAlign: "center" }}>
+    <Stack.Navigator
+      screenOptions={{ headerTitleAlign: "center", headerShown: false }}
+    >
       <Stack.Screen
         name="Funcionarios"
         component={FuncionariosScreen}
-        options={{
-          title: "Funcionários", // Exibe o título
-          headerLeft: () => null, // Remove a seta de voltar
-        }}
+        options={{ title: "Funcionários" }} // Título da tela de funcionários
       />
       <Stack.Screen
         name="CadastrarFuncionario"
         component={CadastrarFuncionariosScreen}
-        options={{ title: "Cadastrar Funcionário" }}
+        options={{ title: "Cadastrar Funcionário" }} // Título da tela de cadastro
       />
       <Stack.Screen
         name="EditarFuncionario"
         component={EditarFuncionarioScreen}
-        options={{ title: "Editar Funcionário" }}
+        options={{ title: "Editar Funcionário" }} // Título da tela de edição
       />
     </Stack.Navigator>
   );
 }
 
-function MainStack() {
+// Stack para as telas de Estoque
+function InventoryStack() {
   return (
-    <Stack.Navigator screenOptions={{ headerShown: false }}>
-      <Stack.Screen name="Login" component={LoginScreen} />
-      <Stack.Screen name="MainTabs" component={MainTabs} />
+    <Stack.Navigator
+      screenOptions={{ headerTitleAlign: "center", headerShown: false }}
+    >
+      <Stack.Screen
+        name="Inventory"
+        component={InventoryScreen}
+        options={{ title: "Estoque" }} // Título da tela de estoque
+      />
+      <Stack.Screen
+        name="AddProduct"
+        component={AddProduct}
+        options={{ title: "Cadastrar Produto" }} // Título da tela de cadastro de produto
+      />
+      <Stack.Screen
+        name="EditProduct"
+        component={EditProduct}
+        options={{ title: "Editar Produtos" }} // Título da tela de edição de produtos
+      />
     </Stack.Navigator>
   );
 }
 
-export default function App() {
-  return (
-    <AuthProvider>
-      <NavigationContainer>
-        <MainStack />
-      </NavigationContainer>
-    </AuthProvider>
-  );
-}
-
+// Tabs principais do aplicativo
 function MainTabs() {
   return (
     <Tab.Navigator
@@ -116,16 +123,22 @@ function MainTabs() {
       <Tab.Screen name="Home" component={HomeScreen} />
       <Tab.Screen name="Vendas" component={SalesScreen} />
       <Tab.Screen name="Relatório" component={ReportScreen} />
-      <Tab.Screen
-        name="Estoque"
-        component={InventoryStack}
-        options={{ headerShown: false }}
-      />
-      <Tab.Screen
-        name="Funcionários"
-        component={FuncionariosStack}
-        options={{ headerShown: false }}
-      />
+      <Tab.Screen name="Estoque" component={InventoryStack} />
+      <Tab.Screen name="Funcionários" component={FuncionariosStack} />
     </Tab.Navigator>
+  );
+}
+
+// Componente principal do aplicativo
+export default function App() {
+  return (
+    <AuthProvider>
+      <NavigationContainer>
+        <Stack.Navigator screenOptions={{ headerShown: false }}>
+          <Stack.Screen name="Auth" component={AuthStack} />
+          <Stack.Screen name="MainTabs" component={MainTabs} />
+        </Stack.Navigator>
+      </NavigationContainer>
+    </AuthProvider>
   );
 }

@@ -11,6 +11,7 @@ const AuthStyle = StyleSheet.create({
     height: 200,
     marginBottom: 20,
     paddingTop: 50, // Adiciona paddingTop de 50
+    resizeMode: "contain",
   },
   input: {
     height: 40,

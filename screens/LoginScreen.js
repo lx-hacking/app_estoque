@@ -1,17 +1,18 @@
+// screens/LoginScreen.js
 import React, { useState } from "react";
 import {
   View,
-  Text,
   TextInput,
   TouchableOpacity,
   Alert,
+  Text,
   Image,
-} from "react-native"; // Importa o componente Image
+} from "react-native";
 import AuthStyle from "./AuthStyle";
-import { useAuth } from "../AuthContext"; // Importa o contexto de autenticação
+import { useAuth } from "../AuthContext";
 
 const LoginScreen = ({ navigation }) => {
-  const { login } = useAuth(); // Obtém a função de login do contexto
+  const { login } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -35,7 +36,7 @@ const LoginScreen = ({ navigation }) => {
 
       if (response.ok) {
         Alert.alert("Sucesso", data.message);
-        login(); // Marca o usuário como logado
+        login();
         navigation.navigate("MainTabs");
       } else {
         setError(data.error);
@@ -49,12 +50,10 @@ const LoginScreen = ({ navigation }) => {
 
   return (
     <View style={AuthStyle.container}>
-      <View style={AuthStyle.logo}>
-        <Image
-          source={require("../assets/logo.webp")} // Adiciona a logo aqui
-          style={{ width: "100%", height: "100%", resizeMode: "contain" }} // Ajusta o estilo da imagem
-        />
-      </View>
+      <Image
+        source={require("../assets/logo.webp")} // Adiciona a logo aqui
+        style={AuthStyle.logo} // Ajuste para o estilo da logo
+      />
       {error ? <Text style={AuthStyle.errorText}>{error}</Text> : null}
       <TextInput
         style={AuthStyle.input}
@@ -85,9 +84,7 @@ const LoginScreen = ({ navigation }) => {
             Esqueceu a senha?
           </Text>
         </TouchableOpacity>
-        <TouchableOpacity onPress={() => Alert.alert("Ir para Registro")}>
-          {" "}
-          {/* Tornando todo o texto clicável */}
+        <TouchableOpacity onPress={() => navigation.navigate("Register")}>
           <Text
             style={{
               color: "tomato",
