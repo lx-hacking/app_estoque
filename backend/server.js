@@ -270,14 +270,13 @@ app.post("/addproduct", (req, res) => {
 app.get("/salesReport", (req, res) => {
   const sql = `
     SELECT 
-      p.nome AS produto, 
-      SUM(v.quantidade) AS quantidade, 
-      SUM(v.valor_venda * v.quantidade) AS valor_total, 
-      DATE_FORMAT(v.data_hora, '%d/%m/%Y') AS data_formatada
-    FROM vendas v
-    JOIN produtos p ON v.produto_id = p.id
-    GROUP BY data_formatada, p.nome
-    ORDER BY data_formatada DESC, p.nome ASC
+      produto_nome AS produto, 
+      SUM(quantidade) AS quantidade, 
+      SUM(valor_venda * quantidade) AS valor_total, 
+      DATE_FORMAT(data_hora, '%d/%m/%Y') AS data_formatada
+    FROM vendas_historico
+    GROUP BY data_formatada, produto_nome
+    ORDER BY data_formatada DESC, produto_nome ASC
   `;
 
   db.query(sql, (err, results) => {
@@ -434,12 +433,14 @@ app.post("/updateproducts", (req, res) => {
 app.delete("/deleteproduct/:id", (req, res) => {
   const { id } = req.params;
 
-  const sql = `DELETE FROM produtos WHERE id = ?`;
-  db.query(sql, [id], (err, result) => {
+  // Exclusão do produto independentemente das vendas
+  const deleteProductSql = `DELETE FROM produtos WHERE id = ?`;
+  db.query(deleteProductSql, [id], (err) => {
     if (err) {
       console.error("Erro ao deletar produto:", err);
       return res.status(500).json({ error: "Erro ao deletar produto." });
     }
+
     res.status(200).json({ message: "Produto deletado com sucesso!" });
 
     // Notifica todos os clientes via WebSocket
@@ -475,10 +476,11 @@ app.post("/finalizarVenda", (req, res) => {
             return reject(`Estoque insuficiente para o produto ${item.nome}`);
           }
 
-          const sqlInsertVenda = `INSERT INTO vendas (produto_id, quantidade, valor_venda, data_hora) VALUES (?, ?, ?, NOW())`;
+          // Inserir na nova tabela vendas_historico
+          const sqlInsertVenda = `INSERT INTO vendas_historico (produto_nome, produto_descricao, quantidade, valor_venda, data_hora) VALUES (?, ?, ?, ?, NOW())`;
           db.query(
             sqlInsertVenda,
-            [item.id, item.quantity, item.valor_venda],
+            [item.nome, item.descricao, item.quantity, item.valor_venda],
             (err) => {
               if (err) {
                 console.error(
