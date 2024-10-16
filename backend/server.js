@@ -270,12 +270,14 @@ app.post("/addproduct", (req, res) => {
 app.get("/salesReport", (req, res) => {
   const sql = `
     SELECT 
-      produto_nome AS produto, 
-      SUM(quantidade) AS quantidade, 
-      SUM(valor_venda * quantidade) AS valor_total, 
-      DATE_FORMAT(data_hora, '%d/%m/%Y') AS data_formatada
-    FROM vendas_historico
-    GROUP BY data_formatada, produto_nome
+      vh.produto_nome AS produto,
+      vh.produto_descricao AS descricao,
+      vh.quantidade,
+      vh.valor_venda * vh.quantidade AS valor_total,
+      DATE_FORMAT(vh.data_hora, '%d/%m/%Y') AS data_formatada,
+      f.nome_completo AS funcionario_nome
+    FROM vendas_historico vh
+    LEFT JOIN funcionarios f ON vh.funcionario_id = f.id
     ORDER BY data_formatada DESC, produto_nome ASC
   `;
 
@@ -296,8 +298,10 @@ app.get("/salesReport", (req, res) => {
       }
       salesByDate[date].items.push({
         produto: row.produto,
+        descricao: row.descricao,
         quantidade: row.quantidade,
         valor_total: row.valor_total,
+        funcionario_nome: row.funcionario_nome,
       });
       salesByDate[date].total += row.valor_total;
     });

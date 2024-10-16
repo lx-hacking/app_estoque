@@ -14,6 +14,7 @@ import * as FileSystem from "expo-file-system";
 import XLSX from "xlsx";
 import ReportStyle from "./ReportStyle"; // Importa os estilos de um arquivo separado
 import { useFocusEffect } from "@react-navigation/native"; // Para detectar quando a tela está em foco
+import { useAuth } from "../AuthContext"; // Importar o contexto de autenticação
 
 const ReportScreen = ({ navigation }) => {
   const [activeReport, setActiveReport] = useState(null);
@@ -24,6 +25,7 @@ const ReportScreen = ({ navigation }) => {
   const [searchTerm, setSearchTerm] = useState("");
   const [sortConfig, setSortConfig] = useState({ key: null, direction: "asc" });
   const ws = useRef(null); // Usando WebSocket
+  const { funcionarioId } = useAuth(); // Obter o ID do funcionário logado
 
   // Função para conectar ao WebSocket e ouvir atualizações de estoque e vendas
   const connectWebSocket = () => {
@@ -105,7 +107,10 @@ const ReportScreen = ({ navigation }) => {
       // Formata os dados para que cada seção represente um dia de vendas
       const formattedData = Object.keys(data).map((date) => ({
         title: date, // A data da seção (DD/MM/AAAA)
-        data: data[date].items,
+        data: data[date].items.map((item) => ({
+          ...item,
+          vendedor: item.funcionario_nome, // Adiciona o nome do vendedor ao item
+        })),
         total: data[date].total, // Total do dia
       }));
       setSalesData(formattedData);
@@ -220,6 +225,9 @@ const ReportScreen = ({ navigation }) => {
       <Text style={ReportStyle.saleText}>Quantidade: {item.quantidade}</Text>
       <Text style={ReportStyle.saleText}>
         Total por Produto: R$ {item.valor_total.toFixed(2)}
+      </Text>
+      <Text style={ReportStyle.saleText}>
+        Vendedor: <Text style={ReportStyle.boldText}>{item.vendedor}</Text>
       </Text>
     </View>
   );
