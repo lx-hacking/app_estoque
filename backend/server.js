@@ -450,10 +450,14 @@ app.delete("/deleteproduct/:id", (req, res) => {
 
 // Endpoint para finalizar a compra e salvar a venda
 app.post("/finalizarVenda", (req, res) => {
-  const { items } = req.body;
+  const { items, funcionarioId } = req.body;
 
   if (!items || items.length === 0) {
     return res.status(400).json({ error: "Nenhum item para processar." });
+  }
+
+  if (!funcionarioId) {
+    return res.status(400).json({ error: "Funcionário não informado." });
   }
 
   const updatePromises = items.map((item) => {
@@ -476,11 +480,20 @@ app.post("/finalizarVenda", (req, res) => {
             return reject(`Estoque insuficiente para o produto ${item.nome}`);
           }
 
-          // Inserir na nova tabela vendas_historico
-          const sqlInsertVenda = `INSERT INTO vendas_historico (produto_nome, produto_descricao, quantidade, valor_venda, data_hora) VALUES (?, ?, ?, ?, NOW())`;
+          // Inserir na tabela vendas_produtos
+          const sqlInsertVenda = `
+  INSERT INTO vendas_historico (produto_nome, produto_descricao, quantidade, valor_venda, data_hora, funcionario_id)
+  VALUES (?, ?, ?, ?, NOW(), ?)
+`;
           db.query(
             sqlInsertVenda,
-            [item.nome, item.descricao, item.quantity, item.valor_venda],
+            [
+              item.nome,
+              item.descricao,
+              item.quantity,
+              item.valor_venda,
+              funcionarioId,
+            ],
             (err) => {
               if (err) {
                 console.error(

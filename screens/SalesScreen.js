@@ -12,10 +12,12 @@ import {
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import SalesScreenStyles from "./SalesScreenStyles"; // Importa os estilos de um arquivo separado
+import { useAuth } from "../AuthContext";
 
 const SalesScreen = ({ navigation }) => {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
+  const { funcionarioId } = useAuth();
   const [sortConfig, setSortConfig] = useState({
     key: "nome",
     direction: "asc",
@@ -176,13 +178,18 @@ const SalesScreen = ({ navigation }) => {
 
   // Função para finalizar a compra e enviar os dados para o backend
   const finalizarCompra = async () => {
+    if (!funcionarioId) {
+      Alert.alert("Erro", "Funcionário não autenticado.");
+      return;
+    }
+
     try {
       const response = await fetch("http://localhost:3000/finalizarVenda", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ items: cartItems }),
+        body: JSON.stringify({ items: cartItems, funcionarioId }),
       });
 
       if (response.ok) {

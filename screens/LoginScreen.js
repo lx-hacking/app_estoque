@@ -36,7 +36,7 @@ const LoginScreen = ({ navigation }) => {
 
       if (response.ok) {
         Alert.alert("Sucesso", data.message);
-        login();
+        login(data.funcionario.id); // Passar o ID do funcionário para o contexto
         navigation.navigate("MainTabs");
       } else {
         setError(data.error);
