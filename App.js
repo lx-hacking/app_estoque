@@ -107,6 +107,7 @@ function MainTabs() {
     <Tab.Navigator
       initialRouteName="Home"
       screenOptions={({ route }) => ({
+        headerTitleAlign: "center", // Adicione esta linha para centralizar o título
         tabBarIcon: ({ focused, color, size }) => {
           let iconName;
           if (route.name === "Home") {
@@ -126,7 +127,11 @@ function MainTabs() {
         tabBarInactiveTintColor: "gray",
       })}
     >
-      <Tab.Screen name="Home" component={HomeScreen} />
+      <Tab.Screen
+        name="Home"
+        component={HomeScreen}
+        options={{ title: "Home", headerTitleAlign: "center" }} // Centraliza o título para a tela Home
+      />
       <Tab.Screen name="Vendas" component={SalesScreen} />
       <Tab.Screen name="Relatório" component={ReportScreen} />
       <Tab.Screen name="Estoque" component={InventoryStack} />

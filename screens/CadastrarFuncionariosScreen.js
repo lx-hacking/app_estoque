@@ -10,8 +10,9 @@ import {
   Modal,
 } from "react-native";
 import * as ImagePicker from "expo-image-picker";
-import { cadastrarFuncionariosStyles } from "./CadastrarFuncionariosStyle"; // Estilo específico para cadastro
-import { Picker } from "@react-native-picker/picker"; // Dropdown (picker) para o cargo
+import { cadastrarFuncionariosStyles } from "./CadastrarFuncionariosStyle";
+import { Picker } from "@react-native-picker/picker";
+import { Ionicons } from "@expo/vector-icons"; // Biblioteca para ícones
 
 export default function CadastrarFuncionariosScreen({ navigation }) {
   const [image, setImage] = useState(null);
@@ -27,7 +28,6 @@ export default function CadastrarFuncionariosScreen({ navigation }) {
   const [modalVisible, setModalVisible] = useState(false);
   const [dataNascimentoError, setDataNascimentoError] = useState("");
   const [dataContratacaoError, setDataContratacaoError] = useState("");
-
   const [campoErro, setCampoErro] = useState({}); // Estado para controlar os erros de campo vazio
 
   const pickImage = async () => {
@@ -177,6 +177,19 @@ export default function CadastrarFuncionariosScreen({ navigation }) {
       showsVerticalScrollIndicator={false}
     >
       <View style={cadastrarFuncionariosStyles.container}>
+        {/* Adicionando a seta de voltar e o título */}
+        <View style={cadastrarFuncionariosStyles.headerContainer}>
+          <TouchableOpacity
+            style={cadastrarFuncionariosStyles.backButton}
+            onPress={() => navigation.goBack()}
+          >
+            <Ionicons name="arrow-back" size={24} color="black" />
+          </TouchableOpacity>
+          <Text style={cadastrarFuncionariosStyles.headerTitle}>
+            Cadastrar Funcionário
+          </Text>
+        </View>
+
         {/* Seção: Informações Pessoais */}
         <Text style={cadastrarFuncionariosStyles.sectionTitle}>
           Informações Pessoais
@@ -426,3 +439,22 @@ export default function CadastrarFuncionariosScreen({ navigation }) {
     </ScrollView>
   );
 }
+
+// Estilo para o botão de voltar e o título
+cadastrarFuncionariosStyles.headerContainer = {
+  flexDirection: "row", // Alinha os itens em linha
+  alignItems: "center", // Alinha verticalmente ao centro
+  paddingTop: 10, // Adiciona um espaçamento superior
+  paddingBottom: 20, // Espaçamento inferior para separar do conteúdo
+};
+
+cadastrarFuncionariosStyles.headerTitle = {
+  fontSize: 20, // Tamanho da fonte do título
+  fontWeight: "bold", // Deixa o título em negrito
+  marginLeft: 10, // Espaçamento entre a seta e o título
+  textAlign: "center", // Centraliza o texto
+};
+
+cadastrarFuncionariosStyles.backButton = {
+  paddingRight: 10, // Espaçamento à direita da seta
+};

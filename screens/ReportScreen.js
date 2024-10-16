@@ -273,13 +273,6 @@ const ReportScreen = ({ navigation }) => {
           <Ionicons name="cube" size={24} color="#fff" />
           <Text style={ReportStyle.buttonText}>Estoque</Text>
         </TouchableOpacity>
-        <TouchableOpacity
-          style={ReportStyle.button}
-          onPress={() => setActiveReport("financial")}
-        >
-          <Ionicons name="wallet" size={24} color="#fff" />
-          <Text style={ReportStyle.buttonText}>Financeiro</Text>
-        </TouchableOpacity>
       </View>
 
       {activeReport && (

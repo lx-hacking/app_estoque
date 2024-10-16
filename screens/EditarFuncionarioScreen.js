@@ -11,6 +11,7 @@ import {
 import * as ImagePicker from "expo-image-picker";
 import { cadastrarFuncionariosStyles } from "./CadastrarFuncionariosStyle"; // Estilo específico para cadastro
 import { Picker } from "@react-native-picker/picker"; // Dropdown (picker) para o cargo
+import { Ionicons } from "@expo/vector-icons"; // Biblioteca para ícones
 
 export default function EditarFuncionarioScreen({ route, navigation }) {
   const { funcionario } = route.params; // Dados do funcionário a ser editado
@@ -206,9 +207,18 @@ export default function EditarFuncionarioScreen({ route, navigation }) {
       showsVerticalScrollIndicator={false}
     >
       <View style={cadastrarFuncionariosStyles.container}>
-        <Text style={cadastrarFuncionariosStyles.sectionTitle}>
-          Editar Funcionário
-        </Text>
+        {/* Adicionando a seta de voltar e o título */}
+        <View style={cadastrarFuncionariosStyles.headerContainer}>
+          <TouchableOpacity
+            style={cadastrarFuncionariosStyles.backButton}
+            onPress={() => navigation.goBack()}
+          >
+            <Ionicons name="arrow-back" size={24} color="black" />
+          </TouchableOpacity>
+          <Text style={cadastrarFuncionariosStyles.headerTitle}>
+            Editar Funcionário
+          </Text>
+        </View>
 
         <Text style={cadastrarFuncionariosStyles.label}>Foto</Text>
         <TouchableOpacity
@@ -527,3 +537,22 @@ export default function EditarFuncionarioScreen({ route, navigation }) {
     </ScrollView>
   );
 }
+
+// Estilo para o botão de voltar e o título
+cadastrarFuncionariosStyles.headerContainer = {
+  flexDirection: "row", // Alinha os itens em linha
+  alignItems: "center", // Alinha verticalmente ao centro
+  paddingTop: 10, // Adiciona um espaçamento superior
+  paddingBottom: 20, // Espaçamento inferior para separar do conteúdo
+};
+
+cadastrarFuncionariosStyles.headerTitle = {
+  fontSize: 20, // Tamanho da fonte do título
+  fontWeight: "bold", // Deixa o título em negrito
+  marginLeft: 10, // Espaçamento entre a seta e o título
+  textAlign: "center", // Centraliza o texto
+};
+
+cadastrarFuncionariosStyles.backButton = {
+  paddingRight: 10, // Espaçamento à direita da seta
+};
