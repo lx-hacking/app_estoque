@@ -10,6 +10,7 @@ import {
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { funcionariosStyles } from "./FuncionariosStyle"; // Importa os estilos de FuncionariosStyle.js
+import { useFocusEffect } from "@react-navigation/native"; // Importe o hook useFocusEffect
 
 // Função para capitalizar as iniciais de cada palavra
 const capitalizeFirstLetter = (str) => {
@@ -84,6 +85,13 @@ export default function FuncionariosScreen({ navigation }) {
       }
     };
   }, []);
+
+  // Hook para resetar a seleção do funcionário ao retornar à tela
+  useFocusEffect(
+    React.useCallback(() => {
+      setSelectedFuncionario(null); // Desmarca qualquer item selecionado
+    }, [])
+  );
 
   const handleCadastrar = () => {
     navigation.navigate("CadastrarFuncionario");
