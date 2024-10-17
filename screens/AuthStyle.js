@@ -9,7 +9,6 @@ const AuthStyle = StyleSheet.create({
   logo: {
     width: 200,
     height: 200,
-    marginBottom: 20,
     paddingTop: 50, // Adiciona paddingTop de 50
     resizeMode: "contain",
   },

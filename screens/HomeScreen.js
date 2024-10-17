@@ -7,7 +7,8 @@ import {
   Image,
   StyleSheet,
 } from "react-native";
-import { useAuth } from "../AuthContext"; // Importe o contexto de autenticação
+import { Ionicons } from "@expo/vector-icons";
+import { useAuth } from "../AuthContext";
 import AuthStyle from "./AuthStyle"; // Importe o estilo da logo
 
 const HomeScreen = ({ navigation }) => {
@@ -34,15 +35,30 @@ const HomeScreen = ({ navigation }) => {
     }
   }, [funcionarioId]);
 
+  // Definindo o botão de logout no header
+  useEffect(() => {
+    navigation.setOptions({
+      headerRight: () => (
+        <TouchableOpacity
+          onPress={() => {
+            logout();
+            navigation.navigate("Login"); // Navegar para a tela de login após o logout
+          }}
+          style={{ paddingRight: 20 }}
+        >
+          <Ionicons name="log-out-outline" size={24} color="tomato" />
+        </TouchableOpacity>
+      ),
+    });
+  }, [navigation]);
+
   const handleLogout = () => {
     logout(); // Chama a função de logout
     navigation.navigate("Login"); // Navega para a tela de login
   };
 
   return (
-    <View
-      style={{ flex: 1, alignItems: "center", justifyContent: "flex-start" }}
-    >
+    <View style={styles.container}>
       {/* Exibe a logo usando o estilo do AuthStyle */}
       <Image
         source={require("../assets/logo.webp")} // Caminho para a logo
@@ -50,7 +66,7 @@ const HomeScreen = ({ navigation }) => {
       />
 
       {/* Exibe o restante da tela centralizado */}
-      <View style={[styles.contentContainer, { marginTop: 20 }]}>
+      <View style={styles.contentContainer}>
         {/* Exibe a foto do usuário, se disponível */}
         {funcionario && funcionario.foto ? (
           <Image
@@ -66,27 +82,25 @@ const HomeScreen = ({ navigation }) => {
           Olá, seja bem-vindo,{" "}
           {funcionario ? funcionario.nome_completo : "Usuário"}
         </Text>
-
-        {/* Botão de logout */}
-        <TouchableOpacity onPress={handleLogout}>
-          <Text style={{ color: "blue", marginTop: 20 }}>Logout</Text>
-        </TouchableOpacity>
       </View>
     </View>
   );
 };
 
 const styles = StyleSheet.create({
-  contentContainer: {
+  container: {
     flex: 1,
-    justifyContent: "center",
+    alignItems: "center",
+    justifyContent: "flex-start", // Alinha o conteúdo ao topo
+  },
+  contentContainer: {
     alignItems: "center",
   },
   userPhoto: {
     width: 150,
     height: 150,
     borderRadius: 75,
-    marginBottom: 20,
+    marginBottom: 20, // Espaçamento abaixo da foto
   },
 });
 
