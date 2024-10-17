@@ -713,6 +713,30 @@ app.post("/salvar-senha", (req, res) => {
     }
   });
 });
+// Endpoint para buscar um funcionário específico pelo ID
+app.get("/getFuncionario/:id", (req, res) => {
+  const { id } = req.params;
+
+  const sql = `SELECT id, nome_completo, cargo, foto FROM funcionarios WHERE id = ?`;
+  db.query(sql, [id], (err, results) => {
+    if (err) {
+      console.error("Erro ao buscar funcionário:", err);
+      return res.status(500).json({ error: "Erro ao buscar funcionário." });
+    }
+
+    if (results.length === 0) {
+      return res.status(404).json({ error: "Funcionário não encontrado." });
+    }
+
+    const funcionario = results[0];
+    res.status(200).json({
+      id: funcionario.id,
+      nome_completo: funcionario.nome_completo,
+      cargo: funcionario.cargo,
+      foto: funcionario.foto ? funcionario.foto.toString("base64") : null,
+    });
+  });
+});
 
 // Inicia o servidor HTTP com suporte a WebSocket
 server.listen(port, () => {

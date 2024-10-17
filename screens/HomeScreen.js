@@ -1,9 +1,38 @@
-import React from "react";
-import { View, Text, TouchableOpacity, Alert } from "react-native";
+import React, { useEffect, useState } from "react";
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  Alert,
+  Image,
+  StyleSheet,
+} from "react-native";
 import { useAuth } from "../AuthContext"; // Importe o contexto de autenticação
+import AuthStyle from "./AuthStyle"; // Importe o estilo da logo
 
 const HomeScreen = ({ navigation }) => {
-  const { logout } = useAuth(); // Obtenha a função de logout do contexto
+  const { funcionarioId, logout } = useAuth(); // Obtenha o ID do funcionário e a função de logout
+  const [funcionario, setFuncionario] = useState(null);
+
+  // Função para buscar os dados do funcionário logado
+  const fetchFuncionarioData = async () => {
+    try {
+      const response = await fetch(
+        `http://localhost:3000/getFuncionario/${funcionarioId}`
+      ); // Usando localhost
+      const data = await response.json();
+      setFuncionario(data); // Define os dados do funcionário
+    } catch (error) {
+      Alert.alert("Erro ao buscar dados do funcionário", error.message);
+    }
+  };
+
+  // Chame a função de busca dos dados quando o componente for montado
+  useEffect(() => {
+    if (funcionarioId) {
+      fetchFuncionarioData();
+    }
+  }, [funcionarioId]);
 
   const handleLogout = () => {
     logout(); // Chama a função de logout
@@ -11,14 +40,54 @@ const HomeScreen = ({ navigation }) => {
   };
 
   return (
-    <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
-      <Text>Bem-vindo à HomeScreen!</Text>
-      <TouchableOpacity onPress={handleLogout}>
-        <Text style={{ color: "blue", marginTop: 20 }}>Logout</Text>{" "}
-        {/* Texto de logout */}
-      </TouchableOpacity>
+    <View
+      style={{ flex: 1, alignItems: "center", justifyContent: "flex-start" }}
+    >
+      {/* Exibe a logo usando o estilo do AuthStyle */}
+      <Image
+        source={require("../assets/logo.webp")} // Caminho para a logo
+        style={AuthStyle.logo} // Usando o estilo da logo já definido
+      />
+
+      {/* Exibe o restante da tela centralizado */}
+      <View style={[styles.contentContainer, { marginTop: 20 }]}>
+        {/* Exibe a foto do usuário, se disponível */}
+        {funcionario && funcionario.foto ? (
+          <Image
+            source={{ uri: `data:image/jpeg;base64,${funcionario.foto}` }} // Mostra a foto do funcionário em base64
+            style={styles.userPhoto}
+          />
+        ) : (
+          <Text>Carregando foto...</Text>
+        )}
+
+        {/* Mensagem de boas-vindas */}
+        <Text>
+          Olá, seja bem-vindo,{" "}
+          {funcionario ? funcionario.nome_completo : "Usuário"}
+        </Text>
+
+        {/* Botão de logout */}
+        <TouchableOpacity onPress={handleLogout}>
+          <Text style={{ color: "blue", marginTop: 20 }}>Logout</Text>
+        </TouchableOpacity>
+      </View>
     </View>
   );
 };
+
+const styles = StyleSheet.create({
+  contentContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  userPhoto: {
+    width: 150,
+    height: 150,
+    borderRadius: 75,
+    marginBottom: 20,
+  },
+});
 
 export default HomeScreen;
