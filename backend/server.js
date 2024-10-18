@@ -738,6 +738,39 @@ app.get("/getFuncionario/:id", (req, res) => {
   });
 });
 
+// Endpoint para buscar as vendas do mês atual por funcionário
+app.get("/salesByFuncionario/:funcionarioId", (req, res) => {
+  const { funcionarioId } = req.params;
+  const currentMonth = new Date().getMonth() + 1; // Mês atual
+  const currentYear = new Date().getFullYear(); // Ano atual
+
+  const sql = `
+    SELECT 
+      DATE_FORMAT(vh.data_hora, '%d/%m/%Y') AS data_formatada,
+      SUM(vh.quantidade * vh.valor_venda) AS total_vendas
+    FROM vendas_historico vh
+    WHERE vh.funcionario_id = ? 
+      AND MONTH(vh.data_hora) = ? 
+      AND YEAR(vh.data_hora) = ?
+    GROUP BY data_formatada
+    ORDER BY data_formatada ASC
+  `;
+
+  db.query(sql, [funcionarioId, currentMonth, currentYear], (err, results) => {
+    if (err) {
+      console.error("Erro ao buscar vendas por funcionário:", err);
+      return res.status(500).json({ error: "Erro ao buscar vendas." });
+    }
+
+    const totalMes = results.reduce((acc, row) => acc + row.total_vendas, 0);
+
+    res.status(200).json({
+      vendas: results,
+      totalMes: totalMes.toFixed(2), // Total do mês
+    });
+  });
+});
+
 // Inicia o servidor HTTP com suporte a WebSocket
 server.listen(port, () => {
   console.log(`Servidor rodando em http://localhost:${port}`);

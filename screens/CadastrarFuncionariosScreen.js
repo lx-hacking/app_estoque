@@ -15,6 +15,7 @@ import { Picker } from "@react-native-picker/picker";
 import { Ionicons } from "@expo/vector-icons"; // Biblioteca para ícones
 
 export default function CadastrarFuncionariosScreen({ navigation }) {
+  
   const [image, setImage] = useState(null);
   const [nomeCompleto, setNomeCompleto] = useState("");
   const [dataNascimento, setDataNascimento] = useState("");
