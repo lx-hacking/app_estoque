@@ -3,7 +3,8 @@ import { StyleSheet } from "react-native";
 const SalesScreenStyles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#f9f9f9",
+    backgroundColor: "#fff",
+    paddingHorizontal: 10,
   },
   header: {
     flexDirection: "row",
@@ -234,7 +235,7 @@ const SalesScreenStyles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    paddingVertical: 12,
+    paddingVertical: 5,
     paddingHorizontal: 16,
     backgroundColor: "#f9f9f9", // Fundo neutro
     borderBottomWidth: 1,
@@ -258,6 +259,28 @@ const SalesScreenStyles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     gap: 6, // Adiciona espaço entre ícone e texto
+  },
+  // Estilos da barra de busca
+  searchContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    borderWidth: 1,
+    borderColor: "#ddd",
+    borderRadius: 8,
+    padding: 5,
+    marginBottom: 10,
+    backgroundColor: "#fff",
+  },
+  searchIcon: {
+    marginRight: 10,
+  },
+  searchInput: {
+    flex: 1,
+    marginLeft: 10,
+    fontSize: 14,
+  },
+  resetIcon: {
+    marginLeft: 10,
   },
 });
 

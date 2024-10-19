@@ -9,6 +9,7 @@ import {
   TouchableOpacity,
   Modal,
   ScrollView,
+  TextInput, // Importa o TextInput para a barra de busca
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import SalesScreenStyles from "./SalesScreenStyles"; // Importa os estilos de um arquivo separado
@@ -28,6 +29,7 @@ const SalesScreen = ({ navigation }) => {
   const [cartItems, setCartItems] = useState([]);
   const [cartModalVisible, setCartModalVisible] = useState(false); // Modal do carrinho
   const ws = useRef(null);
+  const [searchQuery, setSearchQuery] = useState(""); // Estado para o termo de busca
 
   useEffect(() => {
     navigation.setOptions({
@@ -205,6 +207,10 @@ const SalesScreen = ({ navigation }) => {
     }
   };
 
+  const filteredProducts = products.filter((product) =>
+    product.nome.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
   const renderProductItem = ({ item }) => (
     <TouchableOpacity
       style={[
@@ -241,6 +247,32 @@ const SalesScreen = ({ navigation }) => {
 
   return (
     <View style={SalesScreenStyles.container}>
+      {/* Barra de busca */}
+      <View style={SalesScreenStyles.searchContainer}>
+        <Ionicons
+          name="search"
+          size={20}
+          color="#555"
+          style={SalesScreenStyles.searchIcon}
+        />
+        <TextInput
+          style={SalesScreenStyles.searchInput}
+          placeholder="Buscar produtos..."
+          value={searchQuery}
+          onChangeText={setSearchQuery}
+        />
+        {searchQuery.length > 0 && (
+          <TouchableOpacity onPress={() => setSearchQuery("")}>
+            <Ionicons
+              name="close-circle"
+              size={20}
+              color="#555"
+              style={SalesScreenStyles.resetIcon}
+            />
+          </TouchableOpacity>
+        )}
+      </View>
+
       {/* Cabeçalho fixo com colunas */}
       <View style={SalesScreenStyles.header}>
         <View style={SalesScreenStyles.headerColumn}>
@@ -287,7 +319,7 @@ const SalesScreen = ({ navigation }) => {
           <ActivityIndicator size="large" color="#0000ff" />
         ) : (
           <FlatList
-            data={products}
+            data={filteredProducts}
             keyExtractor={(item) => item.id.toString()}
             renderItem={renderProductItem}
             ListEmptyComponent={<Text>Nenhum produto em estoque.</Text>}
