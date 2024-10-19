@@ -1,7 +1,7 @@
 {
   "expo": {
     "name": "AppEstoque",
-    "slug": "AppEstoque",
+    "slug": "appestoque",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -12,16 +12,24 @@
       "backgroundColor": "#ffffff"
     },
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.samineto13.appestoque"
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
-      }
+      },
+      "package": "com.samineto13.appestoque"
     },
     "web": {
       "favicon": "./assets/favicon.png"
-    }
+    },
+    "extra": {
+      "eas": {
+        "projectId": "fe22978b-61ea-4529-b0d1-085f85aa80fb"
+      }
+    },
+    "owner": "samineto13"
   }
 }

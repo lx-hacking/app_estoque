@@ -215,7 +215,9 @@ const AddProduct = ({ navigation }) => {
         )}
       </TouchableOpacity>
 
-      <Button title="Salvar Produto" onPress={saveProduct} />
+      <TouchableOpacity onPress={saveProduct} style={styles.button}>
+        <Text style={styles.buttonText}>Salvar Produto</Text>
+      </TouchableOpacity>
     </View>
   );
 };
@@ -225,6 +227,20 @@ const styles = StyleSheet.create({
     padding: 20,
     backgroundColor: "#fff",
     flex: 1,
+  },
+  button: {
+    height: 40,
+    backgroundColor: "tomato",
+    paddingHorizontal: 15,
+    borderRadius: 8,
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 10,
+  },
+  buttonText: {
+    color: "white",
+    fontWeight: "bold",
+    fontSize: 14,
   },
   header: {
     flexDirection: "row",

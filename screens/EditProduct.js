@@ -226,7 +226,9 @@ const EditProduct = ({ route, navigation }) => {
         keyExtractor={(item) => item.id.toString()}
         renderItem={renderProduct}
         ListEmptyComponent={<Text>Nenhum produto para editar.</Text>}
+        showsVerticalScrollIndicator={false} // Oculta a barra de rolagem vertical
       />
+
       <View style={styles.buttonContainer}>
         <TouchableOpacity
           style={styles.deleteButton}
@@ -304,7 +306,7 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   title: {
-    fontSize: 24,
+    fontSize: 20,
     fontWeight: "bold",
     marginLeft: 10, // Dá espaço entre a seta e o título
   },
@@ -345,8 +347,8 @@ const styles = StyleSheet.create({
     height: 40,
   },
   image: {
-    width: 100,
-    height: 100,
+    width: 150,
+    height: 150,
     borderRadius: 5,
     marginBottom: 10,
   },
@@ -356,35 +358,46 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   buttonContainer: {
+    position: "absolute",
+    bottom: 0,
+    left: 0,
+    right: 0,
     flexDirection: "row",
     justifyContent: "space-between",
-    marginVertical: 20,
-    gap: 20, // Dobra o espaço entre os botões
+    padding: 10,
+    backgroundColor: "#fff", // Se você quiser que o fundo dos botões seja branco
   },
+
   deleteButton: {
     backgroundColor: "red",
-    padding: 15,
-    borderRadius: 10,
-    alignItems: "center",
     flex: 1,
-    marginRight: 10,
+    paddingVertical: 5,
+    paddingHorizontal: 15,
+    borderRadius: 8,
+    alignItems: "center",
+    marginHorizontal: 5,
+    flexDirection: "row",
+    justifyContent: "center",
   },
   deleteButtonText: {
     color: "#fff",
-    fontSize: 16,
+    fontSize: 14,
     fontWeight: "bold",
   },
   saveButton: {
     backgroundColor: "#4BB543",
-    padding: 15,
-    borderRadius: 10,
-    alignItems: "center",
     flex: 1,
-    marginLeft: 10,
+    paddingVertical: 5,
+    paddingHorizontal: 15,
+    borderRadius: 8,
+    alignItems: "center",
+    marginHorizontal: 5,
+    flexDirection: "row",
+    justifyContent: "center",
   },
   saveButtonText: {
     color: "#fff",
-    fontSize: 16,
+    fontSize: 14,
     fontWeight: "bold",
   },
   modalContainer: {

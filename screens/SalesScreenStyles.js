@@ -230,6 +230,35 @@ const SalesScreenStyles = StyleSheet.create({
     color: "#fff",
     fontWeight: "bold",
   },
+  header: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    backgroundColor: "#f9f9f9", // Fundo neutro
+    borderBottomWidth: 1,
+    borderBottomColor: "#ddd", // Linha divisória sutil
+    elevation: 3, // Sombra suave para destacar o cabeçalho
+    shadowColor: "#000",
+    shadowOpacity: 0.1,
+    shadowOffset: { width: 0, height: 2 },
+  },
+  headerColumn: {
+    flex: 1,
+    alignItems: "center",
+  },
+  headerText: {
+    fontSize: 14,
+    fontWeight: "bold",
+    color: "#333", // Texto suave
+  },
+  headerIconTextContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 6, // Adiciona espaço entre ícone e texto
+  },
 });
 
 export default SalesScreenStyles;

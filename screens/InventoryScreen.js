@@ -307,6 +307,7 @@ const InventoryScreen = ({ navigation }) => {
             contentContainerStyle={styles.flatListContainer}
             ListEmptyComponent={<Text>Nenhum produto cadastrado.</Text>}
             showsVerticalScrollIndicator={false}
+            stickyHeaderIndices={[0]} // Adiciona essa linha para fixar o cabeçalho
           />
         </View>
       </View>
@@ -325,7 +326,6 @@ const styles = StyleSheet.create({
     backgroundColor: "#fff",
     borderRadius: 8,
     overflow: "hidden",
-    padding: 10,
   },
   searchContainer: {
     flexDirection: "row",

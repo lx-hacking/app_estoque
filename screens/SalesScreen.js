@@ -243,32 +243,41 @@ const SalesScreen = ({ navigation }) => {
     <View style={SalesScreenStyles.container}>
       {/* Cabeçalho fixo com colunas */}
       <View style={SalesScreenStyles.header}>
-        <View style={SalesScreenStyles.column}>
+        <View style={SalesScreenStyles.headerColumn}>
           <Text style={SalesScreenStyles.headerText}>Foto</Text>
         </View>
+
         <TouchableOpacity
-          style={SalesScreenStyles.column}
+          style={SalesScreenStyles.headerColumn}
           onPress={() => sortProducts("nome")}
         >
-          <Text style={SalesScreenStyles.headerText}>
-            Nome {renderSortIcon("nome")}
-          </Text>
+          <View style={SalesScreenStyles.headerIconTextContainer}>
+            <Ionicons name="cube-outline" size={16} color="#555" />
+            <Text style={SalesScreenStyles.headerText}>Produto</Text>
+            {renderSortIcon("nome")}
+          </View>
         </TouchableOpacity>
+
         <TouchableOpacity
-          style={SalesScreenStyles.column}
+          style={SalesScreenStyles.headerColumn}
           onPress={() => sortProducts("descricao")}
         >
-          <Text style={SalesScreenStyles.headerText}>
-            Volume {renderSortIcon("descricao")}
-          </Text>
+          <View style={SalesScreenStyles.headerIconTextContainer}>
+            <Ionicons name="layers-outline" size={16} color="#555" />
+            <Text style={SalesScreenStyles.headerText}>Volume</Text>
+            {renderSortIcon("descricao")}
+          </View>
         </TouchableOpacity>
+
         <TouchableOpacity
-          style={SalesScreenStyles.column}
+          style={SalesScreenStyles.headerColumn}
           onPress={() => sortProducts("valor_venda")}
         >
-          <Text style={SalesScreenStyles.headerText}>
-            Preço {renderSortIcon("valor_venda")}
-          </Text>
+          <View style={SalesScreenStyles.headerIconTextContainer}>
+            <Ionicons name="pricetag-outline" size={16} color="#555" />
+            <Text style={SalesScreenStyles.headerText}>Preço</Text>
+            {renderSortIcon("valor_venda")}
+          </View>
         </TouchableOpacity>
       </View>
 
@@ -312,27 +321,19 @@ const SalesScreen = ({ navigation }) => {
 
               {/* Layout semelhante ao modal do carrinho */}
               <View style={SalesScreenStyles.cartItemContainer}>
-                {/* Primeira linha: nome do produto em negrito */}
                 <Text style={SalesScreenStyles.cartItemName}>
                   {selectedProduct.nome}
                 </Text>
-
-                {/* Segunda linha: 3 colunas */}
                 <View style={SalesScreenStyles.cartItemDetailsRow}>
-                  {/* Primeira coluna: imagem, alinhada à esquerda */}
                   <Image
                     source={{
                       uri: `data:image/jpeg;base64,${selectedProduct.imagem}`,
                     }}
                     style={SalesScreenStyles.cartItemImage}
                   />
-
-                  {/* Segunda coluna: Volume, centralizado */}
                   <Text style={SalesScreenStyles.cartItemVolume}>
                     Volume: {selectedProduct.descricao}
                   </Text>
-
-                  {/* Terceira coluna: controles de quantidade, alinhados à direita */}
                   <View style={SalesScreenStyles.cartItemQuantityControl}>
                     <TouchableOpacity
                       onPress={decreaseQuantity}
@@ -358,7 +359,6 @@ const SalesScreen = ({ navigation }) => {
                   </View>
                 </View>
 
-                {/* Terceira linha: total do produto alinhado à direita */}
                 <Text style={SalesScreenStyles.cartItemTotal}>
                   Total: R${" "}
                   {(quantity * selectedProduct.valor_venda).toFixed(2)}
@@ -387,7 +387,6 @@ const SalesScreen = ({ navigation }) => {
       >
         <View style={SalesScreenStyles.modalContainer}>
           <View style={SalesScreenStyles.modalContent}>
-            {/* Botão de fechar (X) */}
             <TouchableOpacity
               onPress={() => setCartModalVisible(false)}
               style={SalesScreenStyles.closeButton}
@@ -399,37 +398,28 @@ const SalesScreen = ({ navigation }) => {
               Carrinho de Compras
             </Text>
 
-            {/* ScrollView para rolar o conteúdo sem mostrar a barra de rolagem */}
             <ScrollView
               style={{ width: "100%" }}
-              showsVerticalScrollIndicator={false} // Oculta a barra de rolagem
+              showsVerticalScrollIndicator={false}
             >
               <FlatList
                 data={cartItems}
                 keyExtractor={(item) => item.id.toString()}
                 renderItem={({ item }) => (
                   <View style={SalesScreenStyles.cartItemContainer}>
-                    {/* Primeira linha: nome do produto em negrito */}
                     <Text style={SalesScreenStyles.cartItemName}>
                       {item.nome}
                     </Text>
-
-                    {/* Segunda linha: 3 colunas */}
                     <View style={SalesScreenStyles.cartItemDetailsRow}>
-                      {/* Primeira coluna: imagem, alinhada à esquerda */}
                       <Image
                         source={{
                           uri: `data:image/jpeg;base64,${item.imagem}`,
                         }}
                         style={SalesScreenStyles.cartItemImage}
                       />
-
-                      {/* Segunda coluna: Volume, centralizado */}
                       <Text style={SalesScreenStyles.cartItemVolume}>
                         Frasco: {item.descricao}
                       </Text>
-
-                      {/* Terceira coluna: controles de quantidade, alinhados à direita */}
                       <View style={SalesScreenStyles.cartItemQuantityControl}>
                         <TouchableOpacity
                           onPress={() => {
@@ -484,8 +474,6 @@ const SalesScreen = ({ navigation }) => {
                         </TouchableOpacity>
                       </View>
                     </View>
-
-                    {/* Terceira linha: total do produto alinhado à direita */}
                     <Text style={SalesScreenStyles.cartItemTotal}>
                       Total: R$ {(item.quantity * item.valor_venda).toFixed(2)}
                     </Text>
@@ -494,12 +482,10 @@ const SalesScreen = ({ navigation }) => {
               />
             </ScrollView>
 
-            {/* Total geral */}
             <Text style={SalesScreenStyles.modalTotalText}>
               Total: R$ {getTotalCartValue().toFixed(2)}
             </Text>
 
-            {/* Botões de esvaziar e finalizar */}
             <View style={SalesScreenStyles.cartButtonsContainer}>
               <TouchableOpacity
                 onPress={clearCart}
