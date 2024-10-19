@@ -51,8 +51,11 @@ const LoginScreen = ({ navigation }) => {
   return (
     <View style={AuthStyle.container}>
       <Image
-        source={require("../assets/logo.webp")} // Adiciona a logo aqui
-        style={AuthStyle.logo} // Ajuste para o estilo da logo
+        source={require("../assets/logo.png")} // Verifique se a imagem está correta
+        style={[
+          AuthStyle.logo,
+          { marginTop: 0, paddingTop: 0 }, // Garante que não há padding ou margem
+        ]}
       />
       {error ? <Text style={AuthStyle.errorText}>{error}</Text> : null}
       <TextInput

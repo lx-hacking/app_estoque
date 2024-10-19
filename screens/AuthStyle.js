@@ -4,13 +4,16 @@ const AuthStyle = StyleSheet.create({
   container: {
     flex: 1,
     alignItems: "center",
-    justifyContent: "flex-start", // Muda para flex-start para alinhar ao topo
+    justifyContent: "flex-start", // Mantém o conteúdo no topo
+    padding: 0, // Garante que não há padding
+    margin: 0, // Remove qualquer margem
   },
+
   logo: {
     width: 200,
     height: 200,
-    paddingTop: 50, // Adiciona paddingTop de 50
-    resizeMode: "contain",
+    resizeMode: "contain", // Mantém a proporção da imagem
+    marginTop: 0, // Garante que não há margem superior
   },
   input: {
     height: 40,

@@ -92,7 +92,7 @@ const RegisterScreen = ({ navigation }) => {
   return (
     <View style={AuthStyle.container}>
       <Image
-        source={require("../assets/logo.webp")} // Caminho para a logo
+        source={require("../assets/logo.png")} // Caminho para a logo
         style={AuthStyle.logo} // Estilo da logo
       />
       <TextInput

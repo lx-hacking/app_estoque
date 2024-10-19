@@ -12,6 +12,7 @@ import {
 } from "react-native";
 import * as ImagePicker from "expo-image-picker";
 import { Picker } from "@react-native-picker/picker"; // Importando Picker para o dropdown
+import { Ionicons } from "@expo/vector-icons"; // Para a seta de voltar
 
 const EditProduct = ({ route, navigation }) => {
   const { products } = route.params;
@@ -150,8 +151,8 @@ const EditProduct = ({ route, navigation }) => {
 
   const renderProduct = ({ item, index }) => (
     <View style={styles.productContainer}>
-      {/* Adiciona o título da seção com numeração dos produtos */}
-      <Text style={styles.sectionTitle}>Produto {index + 1}</Text>
+      {/* Adiciona o nome do produto como título */}
+      <Text style={styles.sectionTitle}>{item.nome}</Text>
       <TouchableOpacity onPress={() => pickImage(index)}>
         {item.newImage ? (
           <Image source={{ uri: item.newImage }} style={styles.image} />
@@ -212,6 +213,14 @@ const EditProduct = ({ route, navigation }) => {
 
   return (
     <View style={styles.container}>
+      <View style={styles.header}>
+        <TouchableOpacity onPress={() => navigation.goBack()}>
+          <Ionicons name="arrow-back" size={24} color="black" />
+        </TouchableOpacity>
+        <Text style={styles.title}>Editar Produto</Text>{" "}
+        {/* Adiciona o título */}
+      </View>
+
       <FlatList
         data={editableProducts}
         keyExtractor={(item) => item.id.toString()}
@@ -288,6 +297,16 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 20,
     backgroundColor: "#fff",
+  },
+  header: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 20,
+  },
+  title: {
+    fontSize: 24,
+    fontWeight: "bold",
+    marginLeft: 10, // Dá espaço entre a seta e o título
   },
   sectionTitle: {
     fontSize: 18,

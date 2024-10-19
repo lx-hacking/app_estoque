@@ -3,13 +3,15 @@ import { StyleSheet } from "react-native";
 const ReportStyle = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 20,
-    backgroundColor: "#f9f9f9",
+    backgroundColor: "#fff",
+    borderRadius: 8,
+    overflow: "hidden",
+    padding: 10,
   },
   buttonContainer: {
     flexDirection: "row",
     justifyContent: "space-between",
-    marginBottom: 20,
+    marginBottom: 10,
   },
   button: {
     flex: 1,

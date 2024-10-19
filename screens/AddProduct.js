@@ -4,14 +4,15 @@ import {
   Text,
   TextInput,
   Button,
-  StyleSheet,
   TouchableOpacity,
   Image,
   Modal,
   Alert,
+  StyleSheet,
 } from "react-native";
 import * as ImagePicker from "expo-image-picker";
 import { Picker } from "@react-native-picker/picker";
+import { Ionicons } from "@expo/vector-icons"; // Importa o ícone
 
 const AddProduct = ({ navigation }) => {
   const [productName, setProductName] = useState("");
@@ -23,7 +24,6 @@ const AddProduct = ({ navigation }) => {
   const [base64Image, setBase64Image] = useState(null);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
 
-  // Estados para controlar a cor da borda em caso de erro
   const [borderColors, setBorderColors] = useState({
     name: "#ccc",
     value: "#ccc",
@@ -44,12 +44,11 @@ const AddProduct = ({ navigation }) => {
     if (!result.canceled) {
       setImage(result.assets[0]);
       setBase64Image(result.assets[0].base64);
-      setBorderColors((prev) => ({ ...prev, image: "#ccc" })); // Reseta a borda se a imagem foi selecionada
+      setBorderColors((prev) => ({ ...prev, image: "#ccc" }));
     }
   };
 
   const saveProduct = async () => {
-    // Validação para verificar campos vazios e ajustar as bordas
     const errors = {
       name: productName ? "#ccc" : "tomato",
       value: productValue ? "#ccc" : "tomato",
@@ -115,6 +114,14 @@ const AddProduct = ({ navigation }) => {
 
   return (
     <View style={styles.container}>
+      <View style={styles.header}>
+        <TouchableOpacity onPress={() => navigation.goBack()}>
+          <Ionicons name="arrow-back" size={24} color="black" />
+        </TouchableOpacity>
+        <Text style={styles.title}>Cadastrar Produto</Text>{" "}
+        {/* Adiciona o título */}
+      </View>
+
       <Modal
         visible={showSuccessModal}
         transparent={true}
@@ -218,6 +225,16 @@ const styles = StyleSheet.create({
     padding: 20,
     backgroundColor: "#fff",
     flex: 1,
+  },
+  header: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 20,
+  },
+  title: {
+    fontSize: 24,
+    fontWeight: "bold",
+    marginLeft: 10, // Dá espaço entre a seta e o título
   },
   label: {
     fontSize: 16,

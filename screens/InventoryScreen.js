@@ -376,7 +376,7 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     color: "#333",
     marginBottom: 10,
-    textAlign: "left",
+    textAlign: "center",
   },
   header: {
     flexDirection: "row",

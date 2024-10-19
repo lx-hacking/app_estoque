@@ -15,7 +15,6 @@ import { Picker } from "@react-native-picker/picker";
 import { Ionicons } from "@expo/vector-icons"; // Biblioteca para ícones
 
 export default function CadastrarFuncionariosScreen({ navigation }) {
-  
   const [image, setImage] = useState(null);
   const [nomeCompleto, setNomeCompleto] = useState("");
   const [dataNascimento, setDataNascimento] = useState("");
@@ -104,7 +103,7 @@ export default function CadastrarFuncionariosScreen({ navigation }) {
 
   const formatDate = (date) => {
     const [day, month, year] = date.split("/");
-    return `${year}-${month}-${day}`; // Formato YYYY-MM-DD
+    return `${year}-${month}-${day}`;
   };
 
   const validarCampos = () => {
@@ -440,22 +439,3 @@ export default function CadastrarFuncionariosScreen({ navigation }) {
     </ScrollView>
   );
 }
-
-// Estilo para o botão de voltar e o título
-cadastrarFuncionariosStyles.headerContainer = {
-  flexDirection: "row", // Alinha os itens em linha
-  alignItems: "center", // Alinha verticalmente ao centro
-  paddingTop: 10, // Adiciona um espaçamento superior
-  paddingBottom: 20, // Espaçamento inferior para separar do conteúdo
-};
-
-cadastrarFuncionariosStyles.headerTitle = {
-  fontSize: 20, // Tamanho da fonte do título
-  fontWeight: "bold", // Deixa o título em negrito
-  marginLeft: 10, // Espaçamento entre a seta e o título
-  textAlign: "center", // Centraliza o texto
-};
-
-cadastrarFuncionariosStyles.backButton = {
-  paddingRight: 10, // Espaçamento à direita da seta
-};

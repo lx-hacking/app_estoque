@@ -263,14 +263,14 @@ const ReportScreen = ({ navigation }) => {
             fetchSalesData(); // Chamar a função para buscar os dados
           }}
         >
-          <Ionicons name="stats-chart" size={24} color="#fff" />
+          <Ionicons name="stats-chart" size={20} color="#fff" />
           <Text style={ReportStyle.buttonText}>Vendas</Text>
         </TouchableOpacity>
         <TouchableOpacity
           style={ReportStyle.button}
           onPress={() => setActiveReport("inventory")}
         >
-          <Ionicons name="cube" size={24} color="#fff" />
+          <Ionicons name="cube" size={20} color="#fff" />
           <Text style={ReportStyle.buttonText}>Estoque</Text>
         </TouchableOpacity>
       </View>

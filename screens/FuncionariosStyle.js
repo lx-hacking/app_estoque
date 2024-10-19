@@ -3,13 +3,15 @@ import { StyleSheet } from "react-native";
 export const funcionariosStyles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 20,
     backgroundColor: "#fff",
+    borderRadius: 8,
+    overflow: "hidden",
+    padding: 10,
   },
   buttonContainer: {
     flexDirection: "row",
     justifyContent: "space-between",
-    marginBottom: 20,
+    marginBottom: 10,
   },
   button: {
     flex: 1,
@@ -28,7 +30,7 @@ export const funcionariosStyles = StyleSheet.create({
     marginLeft: 5,
   },
   title: {
-    fontSize: 24,
+    fontSize: 18,
     fontWeight: "bold",
     marginBottom: 20,
     textAlign: "center",
@@ -89,6 +91,6 @@ export const funcionariosStyles = StyleSheet.create({
     justifyContent: "center",
   },
   disabledButton: {
-    backgroundColor: "#cccccc", // Cor cinza para o botão desabilitado
+    backgroundColor: "#ccc",
   },
 });

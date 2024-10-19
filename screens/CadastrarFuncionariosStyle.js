@@ -17,15 +17,15 @@ export const cadastrarFuncionariosStyles = StyleSheet.create({
     marginBottom: 5,
   },
   input: {
-    height: 40, // Altura de 40px para todas as caixas de input
+    height: 40,
     borderWidth: 1,
     paddingHorizontal: 10,
     borderRadius: 5,
     marginBottom: 10,
-    fontSize: 16, // Tamanho da fonte de 16px para inputs
+    fontSize: 16,
   },
   errorInput: {
-    borderColor: "red", // Bordas vermelhas para indicar erro
+    borderColor: "red",
   },
   pickerContainer: {
     borderColor: "#ccc",
@@ -54,7 +54,7 @@ export const cadastrarFuncionariosStyles = StyleSheet.create({
     borderRadius: 5,
   },
   button: {
-    height: 40, // Altura padrão do botão
+    height: 40,
     backgroundColor: "tomato",
     paddingHorizontal: 15,
     borderRadius: 8,
@@ -67,12 +67,11 @@ export const cadastrarFuncionariosStyles = StyleSheet.create({
     fontWeight: "bold",
     fontSize: 16,
   },
-  // Estilo do Modal
   modalContainer: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "rgba(0, 0, 0, 0.5)", // Fundo semitransparente
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
   },
   modalContent: {
     backgroundColor: "white",
@@ -83,9 +82,24 @@ export const cadastrarFuncionariosStyles = StyleSheet.create({
   successText: {
     fontSize: 18,
     marginBottom: 10,
-    color: "#4BB543", // Cor verde para o texto de sucesso
+    color: "#4BB543",
   },
   errorText: {
-    color: "red", // Cor vermelha para o texto de erro
+    color: "red",
+  },
+  headerContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingTop: 10,
+    paddingBottom: 20,
+  },
+  headerTitle: {
+    fontSize: 20,
+    fontWeight: "bold",
+    textAlign: "center",
+    flex: 1, // Isso garante que o título ocupe todo o espaço e seja centralizado
+  },
+  backButton: {
+    paddingRight: 10,
   },
 });
