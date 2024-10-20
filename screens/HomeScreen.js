@@ -102,8 +102,6 @@ const HomeScreen = ({ navigation }) => {
       contentContainerStyle={styles.container}
       showsVerticalScrollIndicator={false}
     >
-      <Image source={require("../assets/logo.png")} style={AuthStyle.logo} />
-
       {funcionario && funcionario.foto ? (
         <Image
           source={{ uri: `data:image/jpeg;base64,${funcionario.foto}` }}
@@ -115,7 +113,13 @@ const HomeScreen = ({ navigation }) => {
 
       <Text>
         Olá, seja bem-vindo,{" "}
-        {funcionario ? funcionario.nome_completo : "Usuário"}
+        {funcionario ? (
+          <Text style={{ fontWeight: "bold" }}>
+            {funcionario.nome_completo}
+          </Text>
+        ) : (
+          "Usuário"
+        )}
       </Text>
 
       <Text style={styles.title}>Vendas de {nomeMes}</Text>
@@ -138,11 +142,22 @@ const styles = StyleSheet.create({
     paddingBottom: 20, // Adicionando espaçamento no final para melhorar o scroll
   },
   userPhoto: {
-    width: 150,
-    height: 150,
-    borderRadius: 75,
+    width: 170, // Tamanho ajustado para ficar mais próximo de perfis em redes sociais
+    height: 170,
+    borderRadius: 200, // Garantindo que a imagem seja circular
     marginBottom: 20,
+    borderWidth: 5, // Adicionando borda
+    borderColor: "#fff", // Borda branca para dar destaque
+    shadowColor: "#000", // Sombra escura
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.3, // Transparência da sombra
+    shadowRadius: 4.65, // Raio da sombra
+    elevation: 8, // Efeito de elevação para Android
   },
+
   title: {
     fontSize: 18,
     fontWeight: "bold",

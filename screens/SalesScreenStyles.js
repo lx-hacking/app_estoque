@@ -237,7 +237,7 @@ const SalesScreenStyles = StyleSheet.create({
     alignItems: "center",
     paddingVertical: 5,
     paddingHorizontal: 16,
-    backgroundColor: "#f9f9f9", // Fundo neutro
+    backgroundColor: "#f1f1f1", // Fundo neutro
     borderBottomWidth: 1,
     borderBottomColor: "#ddd", // Linha divisória sutil
     elevation: 3, // Sombra suave para destacar o cabeçalho

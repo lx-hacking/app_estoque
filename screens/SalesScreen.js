@@ -176,6 +176,7 @@ const SalesScreen = ({ navigation }) => {
 
   const clearCart = () => {
     setCartItems([]);
+    setCartModalVisible(false); // Fecha o modal
   };
 
   // Função para finalizar a compra e enviar os dados para o backend
