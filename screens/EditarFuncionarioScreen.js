@@ -414,27 +414,25 @@ export default function EditarFuncionarioScreen({ route, navigation }) {
             Campo não preenchido
           </Text>
         )}
-
+        <View style={{ paddingBottom: 20 }} />
         {/* Botões de ação */}
-        <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
+        <View style={cadastrarFuncionariosStyles.buttonContainer}>
+          {" "}
           <TouchableOpacity
-            style={[
-              cadastrarFuncionariosStyles.button,
-              { backgroundColor: "red" },
-            ]}
+            style={[cadastrarFuncionariosStyles.deleteButton]}
             onPress={() => setConfirmDeleteVisible(true)} // Abre o modal de confirmação de exclusão
           >
-            <Text style={cadastrarFuncionariosStyles.buttonText}>Deletar</Text>
+            <Text style={cadastrarFuncionariosStyles.deleteButtonText}>
+              Deletar
+            </Text>
           </TouchableOpacity>
-
           <TouchableOpacity
-            style={[
-              cadastrarFuncionariosStyles.button,
-              { backgroundColor: "blue" },
-            ]}
+            style={[cadastrarFuncionariosStyles.saveButton]}
             onPress={handleSubmit}
           >
-            <Text style={cadastrarFuncionariosStyles.buttonText}>Salvar</Text>
+            <Text style={cadastrarFuncionariosStyles.saveButtonText}>
+              Salvar
+            </Text>
           </TouchableOpacity>
         </View>
       </View>

@@ -97,9 +97,52 @@ export const cadastrarFuncionariosStyles = StyleSheet.create({
     fontSize: 20,
     fontWeight: "bold",
     textAlign: "center",
-    flex: 1, // Isso garante que o título ocupe todo o espaço e seja centralizado
+    flex: 1, // Garante que o título ocupe todo o espaço e seja centralizado
   },
   backButton: {
     paddingRight: 10,
+  },
+  buttonContainer: {
+    position: "absolute",
+    bottom: 0,
+    left: 0,
+    right: 0,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    padding: 10,
+    backgroundColor: "#fff",
+  },
+
+  deleteButton: {
+    backgroundColor: "red",
+    flex: 1,
+    paddingVertical: 5,
+    paddingHorizontal: 15,
+    borderRadius: 8,
+    alignItems: "center",
+    marginHorizontal: 5,
+    flexDirection: "row",
+    justifyContent: "center",
+  },
+  deleteButtonText: {
+    color: "#fff",
+    fontSize: 14,
+    fontWeight: "bold",
+  },
+  saveButton: {
+    backgroundColor: "#4BB543",
+    flex: 1,
+    paddingVertical: 5,
+    paddingHorizontal: 15,
+    borderRadius: 8,
+    alignItems: "center",
+    marginHorizontal: 5,
+    flexDirection: "row",
+    justifyContent: "center",
+  },
+  saveButtonText: {
+    color: "#fff",
+    fontSize: 14,
+    fontWeight: "bold",
   },
 });
