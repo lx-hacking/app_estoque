@@ -51,11 +51,8 @@ const LoginScreen = ({ navigation }) => {
   return (
     <View style={AuthStyle.container}>
       <Image
-        source={require("../assets/logo.png")} // Verifique se a imagem está correta
-        style={[
-          AuthStyle.logo,
-          { marginTop: 0, paddingTop: 0 }, // Garante que não há padding ou margem
-        ]}
+        source={require("../assets/logo.png")}
+        style={[AuthStyle.logo, { marginTop: 0, paddingTop: 0 }]}
       />
       {error ? <Text style={AuthStyle.errorText}>{error}</Text> : null}
       <TextInput
@@ -77,16 +74,6 @@ const LoginScreen = ({ navigation }) => {
         <Text style={AuthStyle.buttonText}>Login</Text>
       </TouchableOpacity>
       <View style={AuthStyle.linkContainer}>
-        <TouchableOpacity onPress={() => Alert.alert("Recuperar Senha")}>
-          <Text
-            style={[
-              AuthStyle.linkText,
-              { color: "tomato", fontWeight: "bold", marginBottom: 5 },
-            ]}
-          >
-            Esqueceu a senha?
-          </Text>
-        </TouchableOpacity>
         <TouchableOpacity onPress={() => navigation.navigate("Register")}>
           <Text
             style={{
