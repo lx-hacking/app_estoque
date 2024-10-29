@@ -216,6 +216,16 @@ const ReportScreen = ({ navigation }) => {
     await Sharing.shareAsync(uri);
   };
 
+  // Função para capitalizar o nome do funcionário
+  const capitalizeName = (name) => {
+    if (!name) return "";
+    return name
+      .toLowerCase()
+      .split(" ")
+      .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(" ");
+  };
+
   // Renderiza um item de venda
   const renderSaleItem = ({ item }) => (
     <View style={ReportStyle.saleItem}>
@@ -227,7 +237,10 @@ const ReportScreen = ({ navigation }) => {
         Total por Produto: R$ {item.valor_total.toFixed(2)}
       </Text>
       <Text style={ReportStyle.saleText}>
-        Vendedor: <Text style={ReportStyle.boldText}>{item.vendedor}</Text>
+        Vendedor:{" "}
+        <Text style={ReportStyle.boldText}>
+          {capitalizeName(item.vendedor)}
+        </Text>
       </Text>
     </View>
   );

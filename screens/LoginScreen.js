@@ -36,7 +36,7 @@ const LoginScreen = ({ navigation }) => {
 
       if (response.ok) {
         Alert.alert("Sucesso", data.message);
-        login(data.funcionario.id);
+        login(data.funcionario.id, data.funcionario.cargo); // Inclui cargo
         navigation.navigate("MainTabs");
       } else {
         setError(data.error);

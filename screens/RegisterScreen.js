@@ -46,8 +46,10 @@ const RegisterScreen = ({ navigation }) => {
       console.log("Resposta do servidor:", response.data); // Log da resposta do servidor
 
       if (response.data.exists) {
-        if (response.data.senha_registrada) {
-          setErrorMessage("Usuário já cadastrado."); // Define a mensagem de erro
+        if (response.data.senha_cadastrada) {
+          setErrorMessage("Usuário já cadastrado."); // Define a mensagem de erro se senha já cadastrada
+        } else if (response.data.senha_registrada) {
+          setErrorMessage("Usuário já possui senha registrada."); // Mensagem para usuários com senha registrada, mas não cadastrada
         } else {
           // Gera um código de verificação
           const codigoVerificacao = Math.floor(

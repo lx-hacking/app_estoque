@@ -4,6 +4,7 @@ import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { createStackNavigator } from "@react-navigation/stack";
 import { Ionicons } from "@expo/vector-icons";
 import { AuthProvider } from "./AuthContext";
+import { useAuth } from "./AuthContext";
 
 // Importando telas
 import HomeScreen from "./screens/HomeScreen";
@@ -103,11 +104,13 @@ function InventoryStack() {
 
 // Tabs principais do aplicativo
 function MainTabs() {
+  const { cargo } = useAuth();
+
   return (
     <Tab.Navigator
       initialRouteName="Home"
       screenOptions={({ route }) => ({
-        headerTitleAlign: "center", // Adicione esta linha para centralizar o título
+        headerTitleAlign: "center",
         tabBarIcon: ({ focused, color, size }) => {
           let iconName;
           if (route.name === "Home") {
@@ -129,9 +132,13 @@ function MainTabs() {
     >
       <Tab.Screen name="Home" component={HomeScreen} />
       <Tab.Screen name="Vendas" component={SalesScreen} />
-      <Tab.Screen name="Relatório" component={ReportScreen} />
-      <Tab.Screen name="Estoque" component={InventoryStack} />
-      <Tab.Screen name="Funcionários" component={FuncionariosStack} />
+      {cargo === "Gerente" && (
+        <>
+          <Tab.Screen name="Estoque" component={InventoryStack} />
+          <Tab.Screen name="Relatório" component={ReportScreen} />
+          <Tab.Screen name="Funcionários" component={FuncionariosStack} />
+        </>
+      )}
     </Tab.Navigator>
   );
 }

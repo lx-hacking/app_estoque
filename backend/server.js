@@ -3,8 +3,8 @@ const mysql = require("mysql");
 const cors = require("cors");
 const http = require("http");
 const WebSocket = require("ws");
-const bcrypt = require("bcrypt"); // Importa a biblioteca bcrypt
-const nodemailer = require("nodemailer"); // Importa a biblioteca Nodemailer
+const bcrypt = require("bcrypt");
+const nodemailer = require("nodemailer");
 
 const app = express();
 const port = 3000;
@@ -53,16 +53,13 @@ const isValidDate = (dateString) => {
 // Função auxiliar para formatar datas para dd/mm/yyyy
 const formatarData = (data) => {
   if (!data) return ""; // Verifica se a data é nula ou indefinida
-
   const dataObj = new Date(data);
   if (isNaN(dataObj.getTime())) {
     return ""; // Retorna string vazia se a data for inválida
   }
-
   const day = String(dataObj.getUTCDate()).padStart(2, "0");
   const month = String(dataObj.getUTCMonth() + 1).padStart(2, "0");
   const year = dataObj.getUTCFullYear();
-
   return `${day}/${month}/${year}`;
 };
 
@@ -152,14 +149,12 @@ app.put("/editarFuncionario/:id", (req, res) => {
       image,
     } = req.body;
 
-    // Verifica se as datas estão no formato válido
     if (!isValidDate(data_nascimento) || !isValidDate(data_contratacao)) {
       return res
         .status(400)
         .json({ error: "Formato de data inválido. Use o formato YYYY-MM-DD." });
     }
 
-    // Se houver imagem, converte para binário
     const imagemBuffer = image ? Buffer.from(image, "base64") : null;
 
     const sql = `
@@ -209,61 +204,34 @@ app.put("/editarFuncionario/:id", (req, res) => {
 app.delete("/deleteFuncionario/:id", (req, res) => {
   const { id } = req.params;
 
-  const sql = `DELETE FROM funcionarios WHERE id = ?`;
-  db.query(sql, [id], (err, result) => {
+  const updateNameSql = `
+    UPDATE vendas_historico vh
+    JOIN funcionarios f ON vh.funcionario_id = f.id
+    SET vh.funcionario_nome = CONCAT(f.nome_completo, ' (Desligado)')
+    WHERE f.id = ?;
+  `;
+
+  db.query(updateNameSql, [id], (err) => {
     if (err) {
-      console.error("Erro ao deletar funcionário:", err);
-      return res.status(500).json({ error: "Erro ao deletar funcionário." });
-    }
-    res.status(200).json({ message: "Funcionário deletado com sucesso!" });
-
-    // Notifica todos os clientes via WebSocket
-    broadcastUpdate("DELETE_FUNCIONARIO");
-  });
-});
-
-// Endpoint para salvar o produto no banco de dados
-app.post("/addproduct", (req, res) => {
-  try {
-    const { nome, descricao, valor_venda, quantidade, preco_custo, image } =
-      req.body;
-
-    if (!image) {
-      console.error("Erro: Imagem não foi recebida.");
-      return res.status(400).json({ error: "Erro: Imagem não foi recebida." });
+      console.error("Erro ao atualizar nome do funcionário nas vendas:", err);
+      return res
+        .status(500)
+        .json({ error: "Erro ao atualizar nome nas vendas associadas." });
     }
 
-    const imagemBuffer = Buffer.from(image, "base64");
-
-    const sql = `INSERT INTO produtos (nome, descricao, valor_venda, quantidade, preco_custo, imagem) VALUES (?, ?, ?, ?, ?, ?)`;
-
-    db.query(
-      sql,
-      [
-        nome,
-        descricao,
-        parseFloat(valor_venda),
-        parseInt(quantidade),
-        parseFloat(preco_custo),
-        imagemBuffer,
-      ],
-      (err, result) => {
-        if (err) {
-          console.error("Erro ao inserir produto no banco de dados:", err);
-          return res
-            .status(500)
-            .json({ error: `Erro ao inserir produto: ${err.message}` });
-        }
-        res.status(201).json({ message: "Produto salvo com sucesso!" });
-
-        // Notifica todos os clientes via WebSocket sobre a atualização de estoque
-        broadcastUpdate("UPDATE_STOCK");
+    db.query("DELETE FROM funcionarios WHERE id = ?", [id], (err) => {
+      if (err) {
+        console.error("Erro ao deletar funcionário:", err);
+        return res.status(500).json({ error: "Erro ao deletar funcionário." });
       }
-    );
-  } catch (error) {
-    console.error("Erro inesperado ao processar a requisição:", error);
-    res.status(500).json({ error: `Erro inesperado: ${error.message}` });
-  }
+      res.status(200).json({
+        message: "Funcionário excluído e vendas atualizadas com sucesso!",
+      });
+
+      // Notifica todos os clientes via WebSocket sobre a atualização
+      broadcastUpdate("UPDATE_FUNCIONARIO");
+    });
+  });
 });
 
 // Endpoint para buscar o relatório de vendas agrupado por data e produtos
@@ -275,7 +243,10 @@ app.get("/salesReport", (req, res) => {
       vh.quantidade,
       vh.valor_venda * vh.quantidade AS valor_total,
       DATE_FORMAT(vh.data_hora, '%d/%m/%Y') AS data_formatada,
-      f.nome_completo AS funcionario_nome
+      CASE 
+        WHEN vh.funcionario_id IS NULL THEN vh.funcionario_nome
+        ELSE f.nome_completo
+      END AS funcionario_nome
     FROM vendas_historico vh
     LEFT JOIN funcionarios f ON vh.funcionario_id = f.id
     ORDER BY data_formatada DESC, produto_nome ASC
@@ -289,7 +260,6 @@ app.get("/salesReport", (req, res) => {
         .json({ error: "Erro ao buscar relatório de vendas." });
     }
 
-    // Agrupando os dados por data
     const salesByDate = {};
     results.forEach((row) => {
       const date = row.data_formatada;
@@ -583,7 +553,8 @@ app.post("/login", (req, res) => {
 app.post("/check-email", (req, res) => {
   const { email } = req.body;
 
-  const sql = "SELECT senha_registrada FROM funcionarios WHERE email = ?";
+  const sql =
+    "SELECT senha_registrada, senha_cadastrada FROM funcionarios WHERE email = ?";
   db.query(sql, [email], (err, results) => {
     if (err) {
       return res.status(500).json({ error: "Erro ao verificar e-mail." });
@@ -593,8 +564,8 @@ app.post("/check-email", (req, res) => {
       return res.status(200).json({ exists: false }); // E-mail não existe
     }
 
-    const { senha_registrada } = results[0];
-    res.status(200).json({ exists: true, senha_registrada });
+    const { senha_registrada, senha_cadastrada } = results[0];
+    res.status(200).json({ exists: true, senha_registrada, senha_cadastrada });
   });
 });
 
