@@ -536,12 +536,11 @@ app.post("/finalizarVenda", (req, res) => {
 app.post("/login", (req, res) => {
   const { email, senha } = req.body;
 
-  // Verifica se o e-mail e a senha foram fornecidos
   if (!email || !senha) {
     return res.status(400).json({ error: "E-mail e senha são obrigatórios." });
   }
 
-  // Consulta para encontrar o funcionário com o e-mail fornecido
+  // Verifique se o email existe no banco de dados
   const sql = `SELECT * FROM funcionarios WHERE email = ?`;
   db.query(sql, [email], (err, results) => {
     if (err) {
@@ -550,12 +549,12 @@ app.post("/login", (req, res) => {
     }
 
     if (results.length === 0) {
-      return res.status(401).json({ error: "E-mail ou senha inválidos." });
+      return res.status(404).json({ error: "Usuário inexistente" });
     }
 
     const funcionario = results[0];
 
-    // Comparar a senha fornecida com a senha armazenada
+    // Verifique se a senha está correta
     bcrypt.compare(senha, funcionario.senha, (err, isMatch) => {
       if (err) {
         console.error("Erro ao comparar senhas:", err);
@@ -565,10 +564,9 @@ app.post("/login", (req, res) => {
       }
 
       if (!isMatch) {
-        return res.status(401).json({ error: "E-mail ou senha inválidos." });
+        return res.status(401).json({ error: "Senha inválida" });
       }
 
-      // Se o login for bem-sucedido, retorne os dados do funcionário
       res.status(200).json({
         message: "Login realizado com sucesso!",
         funcionario: {
@@ -605,7 +603,7 @@ const transporter = nodemailer.createTransport({
   service: "gmail",
   auth: {
     user: "samineto@gmail.com", // Seu e-mail
-    pass: "zehn ahfa clrr tzbu", // Sua senha
+    pass: "dncr oxdo dhoy kbaw", // Sua senha
   },
 });
 

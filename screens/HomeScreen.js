@@ -63,6 +63,15 @@ const HomeScreen = ({ navigation }) => {
     return meses[numeroMes - 1];
   };
 
+  // Função para capitalizar o nome do usuário
+  const capitalizeName = (name) => {
+    return name
+      .toLowerCase()
+      .split(" ")
+      .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(" ");
+  };
+
   useEffect(() => {
     if (funcionarioId) {
       fetchFuncionarioData();
@@ -71,7 +80,29 @@ const HomeScreen = ({ navigation }) => {
       const mesAtual = new Date().getMonth() + 1;
       setNomeMes(getNomeMes(mesAtual));
     }
-  }, [funcionarioId]);
+
+    // Conectar ao WebSocket
+    const socket = new WebSocket("ws://localhost:3000");
+
+    socket.onopen = () => {
+      console.log("Conectado ao WebSocket");
+    };
+
+    socket.onmessage = (event) => {
+      const data = JSON.parse(event.data);
+      if (data.type === "UPDATE_SALES") {
+        fetchVendas();
+      }
+    };
+
+    socket.onerror = (error) => {
+      console.error("Erro no WebSocket:", error);
+    };
+
+    return () => {
+      socket.close();
+    };
+  }, [funcionarioId, navigation]);
 
   // Adiciona o botão de logout no cabeçalho
   useEffect(() => {
@@ -79,8 +110,8 @@ const HomeScreen = ({ navigation }) => {
       headerRight: () => (
         <TouchableOpacity
           onPress={() => {
-            logout(); // Função de logout do contexto de autenticação
-            navigation.navigate("Login"); // Redireciona para a tela de login após logout
+            logout();
+            navigation.navigate("Login");
           }}
           style={{ paddingRight: 20 }}
         >
@@ -115,7 +146,7 @@ const HomeScreen = ({ navigation }) => {
         Olá, seja bem-vindo,{" "}
         {funcionario ? (
           <Text style={{ fontWeight: "bold" }}>
-            {funcionario.nome_completo}
+            {capitalizeName(funcionario.nome_completo)}
           </Text>
         ) : (
           "Usuário"
@@ -138,26 +169,25 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: "center",
     justifyContent: "flex-start",
-    width: Dimensions.get("window").width, // Largura total da tela
-    paddingBottom: 20, // Adicionando espaçamento no final para melhorar o scroll
+    width: Dimensions.get("window").width,
+    paddingBottom: 20,
   },
   userPhoto: {
-    width: 170, // Tamanho ajustado para ficar mais próximo de perfis em redes sociais
+    width: 170,
     height: 170,
-    borderRadius: 200, // Garantindo que a imagem seja circular
+    borderRadius: 200,
     marginBottom: 20,
-    borderWidth: 5, // Adicionando borda
-    borderColor: "#fff", // Borda branca para dar destaque
-    shadowColor: "#000", // Sombra escura
+    borderWidth: 5,
+    borderColor: "#fff",
+    shadowColor: "#000",
     shadowOffset: {
       width: 0,
       height: 4,
     },
-    shadowOpacity: 0.3, // Transparência da sombra
-    shadowRadius: 4.65, // Raio da sombra
-    elevation: 8, // Efeito de elevação para Android
+    shadowOpacity: 0.3,
+    shadowRadius: 4.65,
+    elevation: 8,
   },
-
   title: {
     fontSize: 18,
     fontWeight: "bold",
@@ -166,7 +196,7 @@ const styles = StyleSheet.create({
   vendaItem: {
     flexDirection: "row",
     justifyContent: "space-between",
-    width: Dimensions.get("window").width * 0.9, // 90% da largura da tela
+    width: Dimensions.get("window").width * 0.9,
     padding: 10,
     borderBottomWidth: 1,
     borderColor: "#ccc",
