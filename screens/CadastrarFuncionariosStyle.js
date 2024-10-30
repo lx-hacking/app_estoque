@@ -61,11 +61,11 @@ export const cadastrarFuncionariosStyles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     marginBottom: 10,
+    width: "100px",
   },
   buttonText: {
-    color: "#fff",
+    color: "white",
     fontWeight: "bold",
-    fontSize: 16,
   },
   modalContainer: {
     flex: 1,
@@ -78,6 +78,15 @@ export const cadastrarFuncionariosStyles = StyleSheet.create({
     padding: 20,
     borderRadius: 10,
     alignItems: "center",
+  },
+  modalButton: {
+    flex: 1,
+    backgroundColor: "#4BB543", // Cor padrão, pode ser alterada nos botões
+    paddingVertical: 10,
+    borderRadius: 8,
+    width: "100px",
+    alignItems: "center",
+    marginHorizontal: 10, // Gera 20px de espaçamento entre os botões
   },
   successText: {
     fontSize: 18,
@@ -103,14 +112,9 @@ export const cadastrarFuncionariosStyles = StyleSheet.create({
     paddingRight: 10,
   },
   buttonContainer: {
-    position: "absolute",
-    bottom: 0,
-    left: 0,
-    right: 0,
     flexDirection: "row",
     justifyContent: "space-between",
-    padding: 10,
-    backgroundColor: "#fff",
+    marginTop: 20, // Espaço entre o conteúdo e os botões
   },
 
   deleteButton: {

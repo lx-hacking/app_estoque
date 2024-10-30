@@ -3,7 +3,6 @@ import {
   View,
   Text,
   TextInput,
-  Button,
   TouchableOpacity,
   Image,
   Modal,
@@ -12,7 +11,7 @@ import {
 } from "react-native";
 import * as ImagePicker from "expo-image-picker";
 import { Picker } from "@react-native-picker/picker";
-import { Ionicons } from "@expo/vector-icons"; // Importa o ícone
+import { Ionicons } from "@expo/vector-icons";
 
 const AddProduct = ({ navigation }) => {
   const [productName, setProductName] = useState("");
@@ -118,8 +117,7 @@ const AddProduct = ({ navigation }) => {
         <TouchableOpacity onPress={() => navigation.goBack()}>
           <Ionicons name="arrow-back" size={24} color="black" />
         </TouchableOpacity>
-        <Text style={styles.title}>Cadastrar Produto</Text>{" "}
-        {/* Adiciona o título */}
+        <Text style={styles.title}>Cadastrar Produto</Text>
       </View>
 
       <Modal
@@ -130,13 +128,15 @@ const AddProduct = ({ navigation }) => {
         <View style={styles.modalContainer}>
           <View style={styles.modalContent}>
             <Text style={styles.successText}>Produto salvo com sucesso!</Text>
-            <Button
-              title="OK"
+            <TouchableOpacity
+              style={[styles.modalButton, { backgroundColor: "#4BB543" }]}
               onPress={() => {
                 setShowSuccessModal(false);
                 navigation.navigate("Estoque", { refresh: true });
               }}
-            />
+            >
+              <Text style={styles.buttonText}>OK</Text>
+            </TouchableOpacity>
           </View>
         </View>
       </Modal>
@@ -250,7 +250,7 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 24,
     fontWeight: "bold",
-    marginLeft: 10, // Dá espaço entre a seta e o título
+    marginLeft: 10,
   },
   label: {
     fontSize: 16,
@@ -300,6 +300,15 @@ const styles = StyleSheet.create({
     padding: 20,
     borderRadius: 10,
     alignItems: "center",
+  },
+  modalButton: {
+    width: 100, // largura fixa de 100px
+    height: 40,
+    paddingHorizontal: 15,
+    borderRadius: 8,
+    alignItems: "center",
+    justifyContent: "center",
+    marginTop: 10,
   },
   successText: {
     fontSize: 18,

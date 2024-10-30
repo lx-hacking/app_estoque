@@ -281,7 +281,7 @@ const EditProduct = ({ route, navigation }) => {
                 <Text style={styles.modalButtonText}>Deletar</Text>
               </TouchableOpacity>
               <TouchableOpacity
-                style={[styles.modalButton, { backgroundColor: "blue" }]}
+                style={[styles.modalButton, { backgroundColor: "#4BB543" }]}
                 onPress={() => setDeleteModalVisible(false)}
               >
                 <Text style={styles.modalButtonText}>Cancelar</Text>
@@ -424,9 +424,13 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   modalButton: {
-    padding: 10,
-    borderRadius: 5,
+    flex: 1,
+    backgroundColor: "#4BB543", // Cor padrão, pode ser alterada nos botões
+    paddingVertical: 10,
+    borderRadius: 8,
     alignItems: "center",
+    marginHorizontal: 10, // Gera 20px de espaçamento entre os botões
+    width: "100px",
   },
   successButton: {
     backgroundColor: "#4BB543", // Mesma cor verde da mensagem de sucesso

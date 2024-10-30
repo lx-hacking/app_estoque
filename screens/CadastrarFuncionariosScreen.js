@@ -424,7 +424,7 @@ export default function CadastrarFuncionariosScreen({ navigation }) {
             <TouchableOpacity
               style={[
                 cadastrarFuncionariosStyles.button,
-                { backgroundColor: "#4BB543" },
+                { backgroundColor: "#4BB543", width: "100px" },
               ]}
               onPress={() => {
                 setModalVisible(false);

@@ -31,14 +31,22 @@ const ReportStyle = StyleSheet.create({
   },
   titleAndIcons: {
     flexDirection: "row",
-    justifyContent: "space-between",
     alignItems: "center",
-    marginBottom: 10,
+    justifyContent: "center", // Centraliza o conteúdo horizontalmente
+    paddingVertical: 10, // Opcional, para adicionar espaço em torno
   },
+
   iconContainer: {
     flexDirection: "row",
     gap: 15,
   },
+  iconContainer: {
+    position: "absolute",
+    right: 0,
+    flexDirection: "row",
+    alignItems: "center",
+  },
+
   iconButton: {
     flexDirection: "row",
     alignItems: "center",

@@ -9,12 +9,12 @@ import {
   Modal,
 } from "react-native";
 import * as ImagePicker from "expo-image-picker";
-import { cadastrarFuncionariosStyles } from "./CadastrarFuncionariosStyle"; // Estilo específico para cadastro
-import { Picker } from "@react-native-picker/picker"; // Dropdown (picker) para o cargo
-import { Ionicons } from "@expo/vector-icons"; // Biblioteca para ícones
+import { cadastrarFuncionariosStyles } from "./CadastrarFuncionariosStyle";
+import { Picker } from "@react-native-picker/picker";
+import { Ionicons } from "@expo/vector-icons";
 
 export default function EditarFuncionarioScreen({ route, navigation }) {
-  const { funcionario } = route.params; // Dados do funcionário a ser editado
+  const { funcionario } = route.params;
 
   const [image, setImage] = useState(
     funcionario.foto ? `data:image/jpeg;base64,${funcionario.foto}` : null
@@ -34,12 +34,11 @@ export default function EditarFuncionarioScreen({ route, navigation }) {
   const [dataContratacao, setDataContratacao] = useState(
     funcionario.data_contratacao || ""
   );
-  const [modalVisible, setModalVisible] = useState(false); // Estado do Modal de sucesso de edição
-  const [deleteModalVisible, setDeleteModalVisible] = useState(false); // Estado do Modal de deleção
-  const [confirmDeleteVisible, setConfirmDeleteVisible] = useState(false); // Modal para confirmar exclusão
+  const [modalVisible, setModalVisible] = useState(false);
+  const [confirmDeleteVisible, setConfirmDeleteVisible] = useState(false);
   const [dataNascimentoError, setDataNascimentoError] = useState("");
   const [dataContratacaoError, setDataContratacaoError] = useState("");
-  const [campoErro, setCampoErro] = useState({}); // Estado para controle dos erros de campo vazio
+  const [campoErro, setCampoErro] = useState({});
 
   const pickImage = async () => {
     let permissionResult =
@@ -112,7 +111,7 @@ export default function EditarFuncionarioScreen({ route, navigation }) {
 
   const formatDate = (date) => {
     const [day, month, year] = date.split("/");
-    return `${year}-${month}-${day}`; // Formato YYYY-MM-DD
+    return `${year}-${month}-${day}`;
   };
 
   const validarCampos = () => {
@@ -172,7 +171,7 @@ export default function EditarFuncionarioScreen({ route, navigation }) {
 
       const result = await response.json();
       if (response.ok) {
-        setModalVisible(true); // Exibe o modal de sucesso ao salvar
+        setModalVisible(true);
       } else {
         alert(result.error || "Erro ao editar funcionário.");
       }
@@ -191,8 +190,8 @@ export default function EditarFuncionarioScreen({ route, navigation }) {
       );
 
       if (response.ok) {
-        setConfirmDeleteVisible(false); // Fecha o modal de confirmação
-        setDeleteModalVisible(true); // Abre o modal de sucesso
+        setConfirmDeleteVisible(false);
+        navigation.navigate("Funcionarios");
       } else {
         alert("Erro ao excluir funcionário.");
       }
@@ -207,7 +206,6 @@ export default function EditarFuncionarioScreen({ route, navigation }) {
       showsVerticalScrollIndicator={false}
     >
       <View style={cadastrarFuncionariosStyles.container}>
-        {/* Adicionando a seta de voltar e o título */}
         <View style={cadastrarFuncionariosStyles.headerContainer}>
           <TouchableOpacity
             style={cadastrarFuncionariosStyles.backButton}
@@ -414,20 +412,20 @@ export default function EditarFuncionarioScreen({ route, navigation }) {
             Campo não preenchido
           </Text>
         )}
+
         <View style={{ paddingBottom: 20 }} />
-        {/* Botões de ação */}
+
         <View style={cadastrarFuncionariosStyles.buttonContainer}>
-          {" "}
           <TouchableOpacity
-            style={[cadastrarFuncionariosStyles.deleteButton]}
-            onPress={() => setConfirmDeleteVisible(true)} // Abre o modal de confirmação de exclusão
+            style={cadastrarFuncionariosStyles.deleteButton}
+            onPress={() => setConfirmDeleteVisible(true)}
           >
             <Text style={cadastrarFuncionariosStyles.deleteButtonText}>
               Deletar
             </Text>
           </TouchableOpacity>
           <TouchableOpacity
-            style={[cadastrarFuncionariosStyles.saveButton]}
+            style={cadastrarFuncionariosStyles.saveButton}
             onPress={handleSubmit}
           >
             <Text style={cadastrarFuncionariosStyles.saveButtonText}>
@@ -449,58 +447,28 @@ export default function EditarFuncionarioScreen({ route, navigation }) {
             <Text style={cadastrarFuncionariosStyles.successText}>
               Tem certeza que deseja excluir este funcionário?
             </Text>
-            <View
-              style={{ flexDirection: "row", justifyContent: "space-between" }}
-            >
+            <View style={cadastrarFuncionariosStyles.buttonContainer}>
               <TouchableOpacity
                 style={[
-                  cadastrarFuncionariosStyles.button,
+                  cadastrarFuncionariosStyles.modalButton,
                   { backgroundColor: "#4BB543" },
                 ]}
-                onPress={handleDelete} // Exclui o funcionário
+                onPress={handleDelete}
               >
                 <Text style={cadastrarFuncionariosStyles.buttonText}>OK</Text>
               </TouchableOpacity>
               <TouchableOpacity
                 style={[
-                  cadastrarFuncionariosStyles.button,
+                  cadastrarFuncionariosStyles.modalButton,
                   { backgroundColor: "gray" },
                 ]}
-                onPress={() => setConfirmDeleteVisible(false)} // Fecha o modal de confirmação
+                onPress={() => setConfirmDeleteVisible(false)}
               >
                 <Text style={cadastrarFuncionariosStyles.buttonText}>
                   Cancelar
                 </Text>
               </TouchableOpacity>
             </View>
-          </View>
-        </View>
-      </Modal>
-
-      {/* Modal de sucesso na exclusão */}
-      <Modal
-        transparent={true}
-        visible={deleteModalVisible}
-        animationType="fade"
-        onRequestClose={() => setDeleteModalVisible(false)}
-      >
-        <View style={cadastrarFuncionariosStyles.modalContainer}>
-          <View style={cadastrarFuncionariosStyles.modalContent}>
-            <Text style={cadastrarFuncionariosStyles.successText}>
-              Funcionário excluído com sucesso!
-            </Text>
-            <TouchableOpacity
-              style={[
-                cadastrarFuncionariosStyles.button,
-                { backgroundColor: "#4BB543" },
-              ]}
-              onPress={() => {
-                setDeleteModalVisible(false);
-                navigation.navigate("Funcionarios"); // Volta para a lista de funcionários
-              }}
-            >
-              <Text style={cadastrarFuncionariosStyles.buttonText}>OK</Text>
-            </TouchableOpacity>
           </View>
         </View>
       </Modal>
@@ -524,7 +492,7 @@ export default function EditarFuncionarioScreen({ route, navigation }) {
               ]}
               onPress={() => {
                 setModalVisible(false);
-                navigation.navigate("Funcionarios"); // Volta para a lista de funcionários
+                navigation.navigate("Funcionarios");
               }}
             >
               <Text style={cadastrarFuncionariosStyles.buttonText}>OK</Text>
@@ -535,22 +503,3 @@ export default function EditarFuncionarioScreen({ route, navigation }) {
     </ScrollView>
   );
 }
-
-// Estilo para o botão de voltar e o título
-cadastrarFuncionariosStyles.headerContainer = {
-  flexDirection: "row", // Alinha os itens em linha
-  alignItems: "center", // Alinha verticalmente ao centro
-  paddingTop: 10, // Adiciona um espaçamento superior
-  paddingBottom: 20, // Espaçamento inferior para separar do conteúdo
-};
-
-cadastrarFuncionariosStyles.headerTitle = {
-  fontSize: 20, // Tamanho da fonte do título
-  fontWeight: "bold", // Deixa o título em negrito
-  marginLeft: 10, // Espaçamento entre a seta e o título
-  textAlign: "center", // Centraliza o texto
-};
-
-cadastrarFuncionariosStyles.backButton = {
-  paddingRight: 10, // Espaçamento à direita da seta
-};

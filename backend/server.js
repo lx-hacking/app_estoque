@@ -52,16 +52,60 @@ const isValidDate = (dateString) => {
 
 // Função auxiliar para formatar datas para dd/mm/yyyy
 const formatarData = (data) => {
-  if (!data) return ""; // Verifica se a data é nula ou indefinida
+  if (!data) return "";
   const dataObj = new Date(data);
   if (isNaN(dataObj.getTime())) {
-    return ""; // Retorna string vazia se a data for inválida
+    return "";
   }
   const day = String(dataObj.getUTCDate()).padStart(2, "0");
   const month = String(dataObj.getUTCMonth() + 1).padStart(2, "0");
   const year = dataObj.getUTCFullYear();
   return `${day}/${month}/${year}`;
 };
+
+// Endpoint para adicionar um novo produto
+app.post("/addproduct", (req, res) => {
+  const { nome, descricao, valor_venda, quantidade, preco_custo, image } =
+    req.body;
+
+  if (
+    !nome ||
+    !descricao ||
+    !valor_venda ||
+    !quantidade ||
+    !preco_custo ||
+    !image
+  ) {
+    return res.status(400).json({ error: "Todos os campos são obrigatórios." });
+  }
+
+  const imagemBuffer = Buffer.from(image, "base64");
+
+  const sql = `INSERT INTO produtos (nome, descricao, valor_venda, quantidade, preco_custo, imagem) 
+               VALUES (?, ?, ?, ?, ?, ?)`;
+
+  db.query(
+    sql,
+    [
+      nome,
+      descricao,
+      parseFloat(valor_venda),
+      parseInt(quantidade),
+      parseFloat(preco_custo),
+      imagemBuffer,
+    ],
+    (err, result) => {
+      if (err) {
+        console.error("Erro ao adicionar produto:", err);
+        return res.status(500).json({ error: "Erro ao adicionar produto." });
+      }
+      res.status(201).json({ message: "Produto adicionado com sucesso!" });
+
+      // Notifica todos os clientes via WebSocket sobre a atualização
+      broadcastUpdate("UPDATE_STOCK");
+    }
+  );
+});
 
 // Endpoint para cadastrar funcionários
 app.post("/cadastrarFuncionario", (req, res) => {
@@ -131,6 +175,8 @@ app.post("/cadastrarFuncionario", (req, res) => {
     res.status(500).json({ error: `Erro inesperado: ${error.message}` });
   }
 });
+
+// [Resto do código permanece inalterado]
 
 // Endpoint para editar funcionários (com ID na URL)
 app.put("/editarFuncionario/:id", (req, res) => {
