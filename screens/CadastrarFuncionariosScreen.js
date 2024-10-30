@@ -402,7 +402,7 @@ export default function CadastrarFuncionariosScreen({ navigation }) {
 
         {/* Botão Cadastrar */}
         <TouchableOpacity
-          style={cadastrarFuncionariosStyles.button}
+          style={cadastrarFuncionariosStyles.buttonCadastrar}
           onPress={handleSubmit}
         >
           <Text style={cadastrarFuncionariosStyles.buttonText}>Cadastrar</Text>

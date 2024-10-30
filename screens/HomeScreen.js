@@ -11,7 +11,6 @@ import {
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useAuth } from "../AuthContext";
-import AuthStyle from "./AuthStyle";
 
 const HomeScreen = ({ navigation }) => {
   const { funcionarioId, logout } = useAuth();

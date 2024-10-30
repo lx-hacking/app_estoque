@@ -63,6 +63,15 @@ export const cadastrarFuncionariosStyles = StyleSheet.create({
     marginBottom: 10,
     width: "100px",
   },
+  buttonCadastrar: {
+    height: 40,
+    backgroundColor: "tomato",
+    paddingHorizontal: 15,
+    borderRadius: 8,
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 10,
+  },
   buttonText: {
     color: "white",
     fontWeight: "bold",
